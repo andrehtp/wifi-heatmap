@@ -1,0 +1,301 @@
+{
+  "paredes": [
+    {
+      "x1": 0.0,
+      "y1": 0.0,
+      "x2": 0.0,
+      "y2": 3.0,
+      "espessura": 0.1,
+      "material": "concreto",
+      "tipo": "parede"
+    },
+    {
+      "x1": 0.0,
+      "y1": 3.0,
+      "x2": 2.5,
+      "y2": 3.0,
+      "espessura": 0.1,
+      "material": "concreto",
+      "tipo": "parede"
+    },
+    {
+      "x1": 2.5,
+      "y1": 0.0,
+      "x2": 2.5,
+      "y2": 2.25,
+      "espessura": 0.1,
+      "material": "concreto",
+      "tipo": "parede"
+    },
+    {
+      "x1": 0.0,
+      "y1": 3.0,
+      "x2": 0.0,
+      "y2": 6.0,
+      "espessura": 0.1,
+      "material": "concreto",
+      "tipo": "parede"
+    },
+    {
+      "x1": 0.0,
+      "y1": 6.0,
+      "x2": 3.0,
+      "y2": 6.0,
+      "espessura": 0.1,
+      "material": "concreto",
+      "tipo": "parede"
+    },
+    {
+      "x1": 3.0,
+      "y1": 6.0,
+      "x2": 3.0,
+      "y2": 3.5,
+      "espessura": 0.1,
+      "material": "concreto",
+      "tipo": "parede"
+    },
+    {
+      "tipo": "parede",
+      "x1": 0.0,
+      "y1": 0.0,
+      "x2": 2.5,
+      "y2": 0.0,
+      "espessura": 0.15,
+      "material": "tijolo"
+    },
+    {
+      "tipo": "porta",
+      "x1": 2.5,
+      "y1": 2.25,
+      "x2": 2.5,
+      "y2": 3.0,
+      "espessura": 0.05,
+      "material": "madeira"
+    },
+    {
+      "tipo": "porta",
+      "x1": 3.0,
+      "y1": 3.5,
+      "x2": 2.5,
+      "y2": 3.0,
+      "espessura": 0.05,
+      "material": "madeira"
+    },
+    {
+      "tipo": "janela",
+      "x1": 0.0,
+      "y1": 4.0,
+      "x2": 0.0,
+      "y2": 5.0,
+      "espessura": 0.01,
+      "material": "vidro"
+    },
+    {
+      "tipo": "janela",
+      "x1": 0.0,
+      "y1": 1.0,
+      "x2": 0.0,
+      "y2": 2.0,
+      "espessura": 0.01,
+      "material": "vidro"
+    },
+    {
+      "tipo": "parede",
+      "x1": 3.0,
+      "y1": 6.0,
+      "x2": 4.0,
+      "y2": 6.0,
+      "espessura": 0.15,
+      "material": "tijolo"
+    },
+    {
+      "tipo": "parede",
+      "x1": 4.0,
+      "y1": 6.0,
+      "x2": 4.5,
+      "y2": 6.0,
+      "espessura": 0.15,
+      "material": "tijolo"
+    },
+    {
+      "tipo": "parede",
+      "x1": 4.5,
+      "y1": 6.0,
+      "x2": 4.5,
+      "y2": 3.5,
+      "espessura": 0.15,
+      "material": "tijolo"
+    },
+    {
+      "tipo": "parede",
+      "x1": 4.5,
+      "y1": 3.5,
+      "x2": 4.0,
+      "y2": 3.5,
+      "espessura": 0.15,
+      "material": "tijolo"
+    },
+    {
+      "tipo": "parede",
+      "x1": 3.0,
+      "y1": 3.5,
+      "x2": 3.5,
+      "y2": 3.5,
+      "espessura": 0.15,
+      "material": "tijolo"
+    },
+    {
+      "tipo": "porta",
+      "x1": 3.5,
+      "y1": 3.5,
+      "x2": 4.0,
+      "y2": 3.5,
+      "espessura": 0.05,
+      "material": "madeira"
+    },
+    {
+      "tipo": "parede",
+      "x1": 4.5,
+      "y1": 5.0,
+      "x2": 8.5,
+      "y2": 5.0,
+      "espessura": 0.15,
+      "material": "tijolo"
+    },
+    {
+      "tipo": "parede",
+      "x1": 8.5,
+      "y1": 5.0,
+      "x2": 8.5,
+      "y2": 1.0,
+      "espessura": 0.15,
+      "material": "tijolo"
+    },
+    {
+      "tipo": "parede",
+      "x1": 8.5,
+      "y1": 1.0,
+      "x2": 8.0,
+      "y2": 0.0,
+      "espessura": 0.15,
+      "material": "tijolo"
+    },
+    {
+      "tipo": "parede",
+      "x1": 8.0,
+      "y1": 0.0,
+      "x2": 2.5,
+      "y2": 0.0,
+      "espessura": 0.15,
+      "material": "tijolo"
+    },
+    {
+      "tipo": "meia_parede",
+      "x1": 8.5,
+      "y1": 3.5,
+      "x2": 5.5,
+      "y2": 3.5,
+      "espessura": 0.15,
+      "material": "concreto"
+    },
+    {
+      "tipo": "porta",
+      "x1": 8.5,
+      "y1": 1.0,
+      "x2": 8.0,
+      "y2": 0.0,
+      "espessura": 0.05,
+      "material": "madeira"
+    }
+  ],
+  "moveis": [
+    {
+      "tipo": "geladeira",
+      "material": "metal",
+      "x": 4.0,
+      "y": 3.0,
+      "largura": 0.5,
+      "profundidade": 0.5
+    },
+    {
+      "tipo": "fogao",
+      "material": "metal",
+      "x": 5.5,
+      "y": 3.0,
+      "largura": 0.5,
+      "profundidade": 0.5
+    }
+  ],
+  "pontos_medicao": [
+    {
+      "id": 1,
+      "x": 0.75,
+      "y": 2.25
+    },
+    {
+      "id": 2,
+      "x": 0.75,
+      "y": 1.0
+    },
+    {
+      "id": 3,
+      "x": 2.0,
+      "y": 1.0
+    },
+    {
+      "id": 4,
+      "x": 2.0,
+      "y": 2.25
+    },
+    {
+      "id": 5,
+      "x": 3.5,
+      "y": 2.25
+    },
+    {
+      "id": 6,
+      "x": 3.5,
+      "y": 0.75
+    },
+    {
+      "id": 7,
+      "x": 4.75,
+      "y": 0.75
+    },
+    {
+      "id": 8,
+      "x": 6.0,
+      "y": 0.75
+    },
+    {
+      "id": 9,
+      "x": 7.25,
+      "y": 0.75
+    },
+    {
+      "id": 10,
+      "x": 7.25,
+      "y": 1.75
+    },
+    {
+      "id": 11,
+      "x": 7.5,
+      "y": 2.5
+    },
+    {
+      "id": 12,
+      "x": 6.0,
+      "y": 2.25
+    },
+    {
+      "id": 13,
+      "x": 4.25,
+      "y": 2.5
+    },
+    {
+      "id": 14,
+      "x": 2.0,
+      "y": 2.75
+    }
+  ]
+}

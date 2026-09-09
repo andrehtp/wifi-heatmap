@@ -1,0 +1,69 @@
+{
+  "paredes": [
+    {
+      "tipo": "parede",
+      "x1": 0.0,
+      "y1": 1.4,
+      "x2": 0.0,
+      "y2": 7.1,
+      "espessura": 0.15,
+      "material": "concreto"
+    },
+    {
+      "tipo": "parede",
+      "x1": 13.0,
+      "y1": 7.1,
+      "x2": 0.0,
+      "y2": 7.1,
+      "espessura": 0.15,
+      "material": "concreto"
+    },
+    {
+      "tipo": "parede",
+      "x1": 13.0,
+      "y1": 1.4,
+      "x2": 13.0,
+      "y2": 7.1,
+      "espessura": 0.15,
+      "material": "concreto"
+    },
+    {
+      "tipo": "parede",
+      "x1": 0.0,
+      "y1": 1.4,
+      "x2": 13.0,
+      "y2": 1.4,
+      "espessura": 0.15,
+      "material": "concreto"
+    },
+    {
+      "tipo": "parede",
+      "x1": 11.3,
+      "y1": 1.4,
+      "x2": 11.3,
+      "y2": 0.1,
+      "espessura": 0.15,
+      "material": "concreto"
+    },
+    {
+      "tipo": "parede",
+      "x1": 11.3,
+      "y1": 0.1,
+      "x2": 8.4,
+      "y2": 0.1,
+      "espessura": 0.15,
+      "material": "concreto"
+    },
+    {
+      "tipo": "parede",
+      "x1": 8.4,
+      "y1": 0.1,
+      "x2": 8.4,
+      "y2": 1.4,
+      "espessura": 0.15,
+      "material": "concreto"
+    }
+  ],
+  "moveis": [],
+  "pontos_medicao": []
+}
