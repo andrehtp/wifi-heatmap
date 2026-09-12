@@ -1,0 +1,5 @@
+# Pin em 3.10.9: matplotlib 3.11.0/3.11.1 tem um bug (matplotlib#32222) que
+# quebra TextBox ao redimensionar a janela (AttributeError em
+# ResizeEvent.inaxes). Corrigido no PR #32225, mas ainda sem release 3.11.2
+# no PyPI. Atualizar para 3.11.2+ quando publicado.
+matplotlib==3.10.9
