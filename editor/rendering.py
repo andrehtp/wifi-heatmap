@@ -7,6 +7,7 @@ from matplotlib.ticker import MultipleLocator
 from .constants import (
     CORES_MATERIAL,
     COR_PADRAO,
+    ESTILO_PONTO,
     ESTILO_SEGMENTO,
     PASSOS_GRADE,
     TECLAS_MODO,
@@ -95,11 +96,14 @@ class DrawingMixin:
         if self._cliques_pendentes:
             pendente = (f"   |   clique {len(self._cliques_pendentes)}/"
                         f"{self._cliques_necessarios()} (u desfaz)")
+        n_ap = sum(1 for p in self.pontos_medicao
+                   if p.get("tipo", "medicao") == "access_point")
+        n_medicao = len(self.pontos_medicao) - n_ap
         snap_txt = f"snap {self.passo:g} m" if self.snap else "snap off"
         self.ax.set_title(
             f"modo: {modo_txt}   |   {snap_txt}   |   "
             f"paredes: {len(self.paredes)}  moveis: {len(self.moveis)}  "
-            f"pontos: {len(self.pontos_medicao)}"
+            f"pontos: {n_medicao} medicao + {n_ap} ap"
             f"{pendente}",
             fontsize=10, loc="left",
         )
@@ -190,22 +194,34 @@ class DrawingMixin:
                 m["tipo"], ha="center", va="center", fontsize=8,
             )
 
+        tipos_ponto_desenhados = set()
         for pt in self.pontos_medicao:
-            self.ax.scatter([pt["x"]], [pt["y"]], color="tab:blue", zorder=7)
+            tipo = pt.get("tipo", "medicao")
+            estilo = ESTILO_PONTO.get(tipo, ESTILO_PONTO["medicao"])
+            tipos_ponto_desenhados.add(tipo)
+            self.ax.scatter([pt["x"]], [pt["y"]], color=estilo["cor"],
+                            marker=estilo["marcador"], zorder=7)
             self.ax.annotate(
                 str(pt["id"]), (pt["x"], pt["y"]),
                 textcoords="offset points", xytext=(5, 5),
-                fontsize=8, color="tab:blue",
+                fontsize=8, color=estilo["cor"],
             )
 
-        if tipos_desenhados:
+        if tipos_desenhados or tipos_ponto_desenhados:
+            handles = [
+                Line2D([], [], color=ESTILO_SEGMENTO[t]["cor"],
+                       linestyle=ESTILO_SEGMENTO[t]["linestyle"],
+                       linewidth=2, label=ESTILO_SEGMENTO[t]["rotulo"])
+                for t in ESTILO_SEGMENTO if t in tipos_desenhados
+            ]
+            handles += [
+                Line2D([], [], color=ESTILO_PONTO[t]["cor"],
+                       marker=ESTILO_PONTO[t]["marcador"], linestyle="none",
+                       label=ESTILO_PONTO[t]["rotulo"])
+                for t in ESTILO_PONTO if t in tipos_ponto_desenhados
+            ]
             self.ax.legend(
-                handles=[
-                    Line2D([], [], color=ESTILO_SEGMENTO[t]["cor"],
-                           linestyle=ESTILO_SEGMENTO[t]["linestyle"],
-                           linewidth=2, label=ESTILO_SEGMENTO[t]["rotulo"])
-                    for t in ESTILO_SEGMENTO if t in tipos_desenhados
-                ],
+                handles=handles,
                 loc="upper right", fontsize=7, framealpha=0.8,
             )
 

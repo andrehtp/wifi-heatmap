@@ -3,10 +3,12 @@
 USAGE = """
 Editor interativo de planta baixa para o projeto de mapa de calor wifi.
 
-Desenha paredes, janelas, portas, moveis/eletrodomesticos e pontos de
-medicao de sinal diretamente com o mouse sobre um plano cartesiano
-(1 unidade = 1 metro), e salva tudo no JSON que alimenta a etapa de
-interpolacao.
+Desenha paredes, janelas, portas, moveis/eletrodomesticos e pontos (de
+medicao de sinal ou access point) diretamente com o mouse sobre um plano
+cartesiano (1 unidade = 1 metro), e salva tudo no JSON que alimenta a etapa
+de interpolacao. Cada ponto de medicao ja nasce com um campo "leituras_dbm"
+vazio, que a futura etapa de medicao preenche com ate 5 leituras de
+potencia do sinal em dBm.
 
 Uso:
     python planta_editor.py --largura 8 --altura 6 --saida planta_casa.json
@@ -29,16 +31,17 @@ Mouse:
 A posicao do cursor aparece o tempo todo: mira, coordenada ja encaixada
 na grade e destaque do objeto sob a mira, sem precisar clicar.
 
-Modos (clique em 2 pontos, menos o ponto de medicao que e 1 clique):
+Modos (clique em 2 pontos, menos o ponto que e 1 clique):
     w   parede inteira
     m   meia parede / parede com vao
     j   janela
     d   porta
     f   movel / eletrodomestico  (2 cantos opostos do retangulo)
-    p   ponto de medicao         (1 clique)
+    p   ponto de medicao ou access point  (1 clique; 1/2 escolhe o tipo)
 
 Outras teclas:
-    1-9 escolher o material (ou o tipo de movel) do modo atual
+    1-9 escolher o material, o tipo de movel ou o tipo de ponto
+        (medicao/access point) do modo atual
     u   desfazer (inclui edicoes e exclusoes feitas no painel)
     esc cancelar os cliques pendentes do elemento em construcao
     g   ligar/desligar o snap (encaixe na grade)
@@ -86,6 +89,7 @@ PALETAS = {
     "porta":       ("material", ["madeira", "vidro", "metal"]),
     "movel":       ("tipo", ["geladeira", "fogao", "micro-ondas", "tv",
                              "sofa", "armario", "mesa", "cama", "outro"]),
+    "ponto":       ("tipo", ["medicao", "access_point"]),
 }
 
 # Espessura assumida por material, para nao precisar digitar nada.
@@ -121,6 +125,11 @@ ESTILO_SEGMENTO = {
     "meia_parede": {"cor": "dimgray",    "linestyle": (0, (6, 4)),   "rotulo": "meia parede / vao"},
     "janela":      {"cor": "tab:cyan",   "linestyle": "-",           "rotulo": "janela"},
     "porta":       {"cor": "tab:orange", "linestyle": "-",           "rotulo": "porta"},
+}
+
+ESTILO_PONTO = {
+    "medicao":      {"cor": "tab:blue", "marcador": "o", "rotulo": "ponto de medicao"},
+    "access_point": {"cor": "tab:red",  "marcador": "^", "rotulo": "access point"},
 }
 
 CORES_MATERIAL = {

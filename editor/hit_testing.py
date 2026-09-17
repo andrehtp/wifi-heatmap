@@ -2,7 +2,7 @@
 
 import math
 
-from .constants import TOLERANCIA_PX
+from .constants import ESTILO_PONTO, TOLERANCIA_PX
 from .geometry import dist_ponto_retangulo, dist_ponto_segmento
 
 
@@ -81,4 +81,5 @@ class HitTestingMixin:
         if categoria == "movel":
             return (f"movel {obj['tipo']} {obj['material']} "
                     f"({obj['largura']:g} x {obj['profundidade']:g} m)")
-        return f"ponto de medicao {obj['id']}"
+        estilo = ESTILO_PONTO.get(obj.get("tipo", "medicao"), ESTILO_PONTO["medicao"])
+        return f"{estilo['rotulo']} {obj['id']}"

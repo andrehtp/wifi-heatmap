@@ -38,11 +38,16 @@ class ElementsMixin:
         self._redesenhar()
 
     def _adicionar_ponto(self, x, y):
+        tipo = self._opcao_atual("ponto")
         self._snapshot()
         ponto_id = self._next_ponto_id
         self._next_ponto_id += 1
-        self.pontos_medicao.append({"id": ponto_id, "x": x, "y": y})
-        print(f"+ ponto de medicao {ponto_id} em ({x}, {y})")
+        ponto = {"id": ponto_id, "x": x, "y": y, "tipo": tipo}
+        if tipo == "medicao":
+            ponto["leituras_dbm"] = []
+        self.pontos_medicao.append(ponto)
+        rotulo = "access point" if tipo == "access_point" else "ponto de medicao"
+        print(f"+ {rotulo} {ponto_id} em ({x}, {y})")
         self._redesenhar()
 
     # ------------------------------------------------------------------ #
@@ -92,6 +97,10 @@ class ElementsMixin:
         self.pontos_medicao = dados.get("pontos_medicao", [])
         for p in self.paredes:  # plantas antigas nao tinham o campo "tipo"
             p.setdefault("tipo", "parede")
+        for pt in self.pontos_medicao:  # idem para tipo/leituras dos pontos
+            pt.setdefault("tipo", "medicao")
+            if pt["tipo"] == "medicao":
+                pt.setdefault("leituras_dbm", [])
         if self.pontos_medicao:
             self._next_ponto_id = max(p["id"] for p in self.pontos_medicao) + 1
         print(f"Planta carregada de {path} "

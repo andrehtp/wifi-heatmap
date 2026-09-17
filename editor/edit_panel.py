@@ -19,7 +19,10 @@ def proximo(opcoes, atual):
 
 
 class EditPanelMixin:
-    def _mostrar_edicao(self, visivel, n_caixas=5, com_tipo=True):
+    def _mostrar_edicao(self, visivel, n_caixas=5, com_tipo=True,
+                        com_material=None):
+        if com_material is None:
+            com_material = com_tipo
         # set_visible() sozinho nao basta: AxesWidget.ignore() so olha o
         # estado "active", entao um widget escondido continuaria clicavel.
         for widget in self._widgets_edicao:
@@ -30,9 +33,10 @@ class EditPanelMixin:
                 ativa = i < n_caixas
                 caixa.ax.set_visible(ativa)
                 caixa.set_active(ativa)
-            for botao in (self._bt_tipo, self._bt_material):
-                botao.ax.set_visible(com_tipo)
-                botao.set_active(com_tipo)
+            for botao, ativo in ((self._bt_tipo, com_tipo),
+                                 (self._bt_material, com_material)):
+                botao.ax.set_visible(ativo)
+                botao.set_active(ativo)
         self._titulo_edicao.set_visible(visivel)
         self._painel.set_visible(not visivel)
 
@@ -59,7 +63,7 @@ class EditPanelMixin:
             self._campos = [("id", "id"), ("x", "x"), ("y", "y")]
 
         self._mostrar_edicao(True, n_caixas=len(self._campos),
-                             com_tipo=categoria != "ponto")
+                             com_tipo=True, com_material=categoria != "ponto")
         for caixa, (chave, rotulo) in zip(self._caixas, self._campos):
             caixa.label.set_text(rotulo + " ")
             definir_texto(caixa, fmt(self._edicao.get(chave, 0)))
@@ -79,7 +83,10 @@ class EditPanelMixin:
             "os botoes trocam tipo/material;\n"
             "'aplicar' confirma, 'u' desfaz."
         )
-        if categoria != "ponto":
+        if categoria == "ponto":
+            self._bt_tipo.label.set_text(
+                f"tipo: {self._edicao.get('tipo', 'medicao').replace('_', ' ')}")
+        else:
             self._bt_tipo.label.set_text(
                 f"tipo: {self._edicao['tipo'].replace('_', ' ')}")
             self._bt_material.label.set_text(
@@ -118,6 +125,13 @@ class EditPanelMixin:
             else:
                 self._edicao["material"] = proximo(
                     MATERIAIS_MOVEL, self._edicao.get("material"))
+        elif categoria == "ponto" and campo == "tipo":
+            self._edicao["tipo"] = proximo(
+                PALETAS["ponto"][1], self._edicao.get("tipo", "medicao"))
+            if self._edicao["tipo"] == "medicao":
+                self._edicao.setdefault("leituras_dbm", [])
+            else:
+                self._edicao.pop("leituras_dbm", None)
         self._atualizar_botoes_edicao()
         self.fig.canvas.draw_idle()
 
