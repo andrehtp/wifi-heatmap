@@ -16,12 +16,15 @@ class HeatmapViewer(WidgetsMixin):
         self.saida_base = saida_base
         self.metodo = metodo
         self.estilo = estilo
-        self._cax = None  # eixo da colorbar atual, recriado a cada redesenho
 
         self.fig, self.ax = plt.subplots(figsize=(12, 8))
         if self.fig.canvas.manager is not None:
             self.fig.canvas.manager.set_window_title("Mapa de calor Wi-Fi")
-        self.fig.subplots_adjust(left=0.06, right=0.64, top=0.94, bottom=0.08)
+        self.fig.subplots_adjust(left=0.06, right=0.58, top=0.94, bottom=0.10)
+        # eixo fixo da colorbar, criado uma unica vez: fig.colorbar(..., ax=self.ax)
+        # encolheria self.ax de novo a cada chamada (cumulativo entre redesenhos),
+        # por isso desenhamos sempre dentro deste cax reservado (cla() + colorbar(cax=...))
+        self._cax = self.fig.add_axes([0.615, 0.10, 0.02, 0.80])
 
         self._criar_widgets()
         self._redesenhar()
@@ -32,9 +35,7 @@ class HeatmapViewer(WidgetsMixin):
 
     def _redesenhar(self):
         self.ax.cla()
-        if self._cax is not None:
-            self._cax.remove()
-            self._cax = None
+        self._cax.cla()
 
         xmin, xmax, ymin, ymax = extents(self.dados)
         self.ax.set_xlim(xmin, xmax)
@@ -69,9 +70,7 @@ class HeatmapViewer(WidgetsMixin):
         desenhar_planta_base(self.ax, self.dados)
 
         if mappable is not None:
-            colorbar = self.fig.colorbar(
-                mappable, ax=self.ax, label=constants.ROTULO_COLORBAR)
-            self._cax = colorbar.ax
+            self.fig.colorbar(mappable, cax=self._cax, label=constants.ROTULO_COLORBAR)
 
         self.fig.canvas.draw_idle()
 
