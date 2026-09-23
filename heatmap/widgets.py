@@ -3,6 +3,7 @@
 from matplotlib.widgets import Button, RadioButtons, TextBox
 
 from .interpolation import MODOS_INTERPOLACAO
+from .mascara import MODOS_AREA
 from .rendering import MODOS_RENDER
 
 
@@ -30,8 +31,16 @@ class WidgetsMixin:
             self.fig.add_axes([col_x, 0.560, col_larg, 0.140]),
             rotulos_estilo, active=list(MODOS_RENDER).index(self.estilo))
 
+        self.fig.text(col_x, 0.520, "AREA DO MAPA",
+                      fontsize=9, family="monospace", va="top", weight="bold")
+        rotulos_area = [rotulo for rotulo, _ in MODOS_AREA.values()]
+        self._radio_area = RadioButtons(
+            self.fig.add_axes([col_x, 0.360, col_larg, 0.140]),
+            rotulos_area, active=list(MODOS_AREA).index(self.area))
+
         self._radio_metodo.on_clicked(self._mudar_metodo)
         self._radio_estilo.on_clicked(self._mudar_estilo)
+        self._radio_area.on_clicked(self._mudar_area)
 
         self.fig.text(col_x, 0.220, "EXPORTAR",
                       fontsize=9, family="monospace", va="top", weight="bold")
@@ -58,5 +67,12 @@ class WidgetsMixin:
         for chave, (r, _, _) in MODOS_RENDER.items():
             if r == rotulo:
                 self.estilo = chave
+                break
+        self._redesenhar()
+
+    def _mudar_area(self, rotulo):
+        for chave, (r, _) in MODOS_AREA.items():
+            if r == rotulo:
+                self.area = chave
                 break
         self._redesenhar()
