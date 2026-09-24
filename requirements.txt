@@ -3,3 +3,7 @@
 # ResizeEvent.inaxes). Corrigido no PR #32225, mas ainda sem release 3.11.2
 # no PyPI. Atualizar para 3.11.2+ quando publicado.
 matplotlib==3.10.9
+
+# Geometria das paredes em poligono: recorte pelas portas/janelas, cantos,
+# deteccao de comodos e distribuicao automatica de pontos (editor/ e heatmap/).
+shapely==2.1.2

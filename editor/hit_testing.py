@@ -1,16 +1,27 @@
-"""Deteccao do objeto (parede, movel ou ponto) sob o cursor."""
+"""Deteccao do objeto (parede, abertura, guia, movel ou ponto) sob o cursor."""
 
 import math
 
+from shapely import Point
+
 from .constants import ESTILO_PONTO, TOLERANCIA_PX
 from .geometry import dist_ponto_retangulo, dist_ponto_segmento
+from .poligonos import espessura_aproximada, para_shapely
 
 
 class HitTestingMixin:
     def _lista(self, categoria):
         return {"parede": self.paredes,
+                "abertura": self.aberturas,
+                "guia": self.guias,
                 "movel": self.moveis,
                 "ponto": self.pontos_medicao}[categoria]
+
+    def _paredes_geo(self):
+        """Polygon de cada parede, em cache ate o proximo redesenho."""
+        if "paredes" not in self._cache_geo:
+            self._cache_geo["paredes"] = [para_shapely(p) for p in self.paredes]
+        return self._cache_geo["paredes"]
 
     def _selecao_valida(self):
         if self._sel is None:
@@ -32,11 +43,23 @@ class HitTestingMixin:
             return None
         tolerancia = self._tolerancia_dados()
         melhor, menor = None, tolerancia
+        cursor = Point(x, y)
 
-        for i, p in enumerate(self.paredes):
-            d = dist_ponto_segmento(x, y, p["x1"], p["y1"], p["x2"], p["y2"])
+        # dentro de uma parede conta como meia tolerancia: bordas de moveis,
+        # aberturas e pontos por perto continuam ganhando dela
+        for i, pol in enumerate(self._paredes_geo()):
+            d = tolerancia / 2 if pol.contains(cursor) else pol.boundary.distance(cursor)
             if d <= menor:
                 melhor, menor = ("parede", i), d
+        if self.mostrar_guias:
+            for i, g in enumerate(self.guias):
+                d = dist_ponto_segmento(x, y, g["x1"], g["y1"], g["x2"], g["y2"])
+                if d <= menor:
+                    melhor, menor = ("guia", i), d
+        for i, a in enumerate(self.aberturas):
+            d = dist_ponto_segmento(x, y, a["x1"], a["y1"], a["x2"], a["y2"])
+            if d <= menor:
+                melhor, menor = ("abertura", i), d
         for i, m in enumerate(self.moveis):
             d, _dentro = dist_ponto_retangulo(
                 x, y, m["x"], m["y"], m["largura"], m["profundidade"])
@@ -65,6 +88,9 @@ class HitTestingMixin:
     def _pontos_realce(self, categoria, indice):
         obj = self._lista(categoria)[indice]
         if categoria == "parede":
+            vs = obj["vertices"] + obj["vertices"][:1]
+            return [v[0] for v in vs], [v[1] for v in vs]
+        if categoria in ("abertura", "guia"):
             return [obj["x1"], obj["x2"]], [obj["y1"], obj["y2"]]
         if categoria == "movel":
             x0, y0 = obj["x"], obj["y"]
@@ -75,11 +101,30 @@ class HitTestingMixin:
     def _descricao(self, categoria, indice):
         obj = self._lista(categoria)[indice]
         if categoria == "parede":
+            pol = para_shapely(obj)
+            return (f"{obj['tipo'].replace('_', ' ')} {obj['material']} "
+                    f"({pol.area:.2f} m², esp. ~{espessura_aproximada(pol):.2f} m)")
+        if categoria in ("abertura", "guia"):
             comp = math.hypot(obj["x2"] - obj["x1"], obj["y2"] - obj["y1"])
-            return (f"{obj.get('tipo', 'parede').replace('_', ' ')} "
-                    f"{obj['material']} ({comp:.2f} m)")
+            if categoria == "guia":
+                return f"guia ({comp:.2f} m)"
+            material = "" if obj["tipo"] == "vao" else f" {obj['material']}"
+            return f"{obj['tipo'].replace('_', ' ')}{material} ({comp:.2f} m)"
         if categoria == "movel":
-            return (f"movel {obj['tipo']} {obj['material']} "
+            return (f"{obj['nome']} {obj['material']} "
                     f"({obj['largura']:g} x {obj['profundidade']:g} m)")
         estilo = ESTILO_PONTO.get(obj.get("tipo", "medicao"), ESTILO_PONTO["medicao"])
         return f"{estilo['rotulo']} {obj['id']}"
+
+    def _descricao_comodo(self, x, y):
+        """Area do comodo sob o cursor, para conferir medidas na hora."""
+        salas, fechado = self._comodos()
+        if not fechado:
+            return None
+        cursor = Point(x, y)
+        for sala in salas:
+            if sala.contains(cursor):
+                x0, y0, x1, y1 = sala.bounds
+                return (f"comodo {sala.area:.2f} m² "
+                        f"({x1 - x0:.2f} x {y1 - y0:.2f} m)")
+        return None

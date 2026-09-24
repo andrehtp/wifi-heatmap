@@ -1,20 +1,11 @@
-"""Leitura da tabela CSV de medicoes e aplicacao no JSON da planta."""
+"""Leitura da tabela CSV de medicoes e associacao aos pontos da planta.
+
+As leituras nao ficam mais no JSON da planta: o CSV e ligado aos pontos
+de medicao pelo "id" na hora de gerar o heatmap.
+"""
 
 import csv
-import json
 from pathlib import Path
-
-MAX_LEITURAS = 5
-
-
-def carregar_planta(path):
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def salvar_planta(dados, path):
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(dados, f, indent=2, ensure_ascii=False)
 
 
 def ler_csv_leituras(path):
@@ -55,30 +46,25 @@ def ler_csv_leituras(path):
     return leituras_por_id, avisos
 
 
-def aplicar_leituras(dados, leituras_por_id):
-    """Grava leituras_dbm nos pontos de medicao correspondentes.
+def associar_leituras(dados, leituras_por_id):
+    """Filtra as leituras do CSV para os pontos de medicao da planta.
 
-    Politica: substitui as leituras do ponto pelas do CSV (nao soma).
-    Nunca lanca excecao por dado ruim: ids desconhecidos ou de
-    access_point viram aviso e sao ignorados.
+    Retorna (leituras validas {id: [floats]}, avisos). Ids que nao existem
+    na planta ou que sao de access point viram aviso e ficam de fora.
     """
-    pontos_por_id = {p["id"]: p for p in dados["pontos_medicao"]}
-    resumo = {"atualizados": 0, "avisos": [], "leituras_gravadas": 0}
-
+    tipos = {p["id"]: p.get("tipo", "medicao")
+             for p in dados.get("pontos_medicao", [])}
+    validas, avisos = {}, []
     for pid, valores in leituras_por_id.items():
-        pt = pontos_por_id.get(pid)
-        if pt is None:
-            resumo["avisos"].append(f"id {pid}: nao existe na planta, ignorado")
-            continue
-        if pt.get("tipo") != "medicao":
-            resumo["avisos"].append(f"id {pid}: e access_point, ignorado")
-            continue
-        if len(valores) > MAX_LEITURAS:
-            resumo["avisos"].append(
-                f"id {pid}: {len(valores)} leituras no CSV, usando as primeiras {MAX_LEITURAS}")
-            valores = valores[:MAX_LEITURAS]
-        pt["leituras_dbm"] = valores
-        resumo["atualizados"] += 1
-        resumo["leituras_gravadas"] += len(valores)
-
-    return resumo
+        if pid not in tipos:
+            avisos.append(f"id {pid}: nao existe na planta, ignorado")
+        elif tipos[pid] != "medicao":
+            avisos.append(f"id {pid}: e access_point, ignorado")
+        elif valores:
+            validas[pid] = valores
+    sem_leitura = [pid for pid, tipo in tipos.items()
+                   if tipo == "medicao" and pid not in validas]
+    if sem_leitura:
+        avisos.append(f"{len(sem_leitura)} ponto(s) de medicao sem leitura "
+                      f"na tabela: {sorted(sem_leitura)}")
+    return validas, avisos

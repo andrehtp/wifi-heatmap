@@ -8,25 +8,38 @@ duas etapas independentes do pipeline.
 USAGE = """
 Visualizador interativo de mapa de calor de sinal Wi-Fi.
 
-Le uma planta JSON (gerada pelo editor e com leituras_dbm preenchidas,
-ex: por importar_medicoes.py) e desenha o mapa de calor por cima dela.
+Le uma planta JSON (gerada pelo editor) e uma tabela CSV de medicoes
+(coluna "id" + colunas de leitura em dBm, ligadas aos pontos de medicao
+pelo id) e desenha o mapa de calor por cima da planta.
 
 Uso:
-    python heatmap_gerador.py --entrada planta_casa.json
+    python heatmap_gerador.py --entrada planta_casa.json --tabela medicao.csv
 
     # nome base para os arquivos exportados (padrao: nome da entrada sem extensao)
-    python heatmap_gerador.py --entrada planta_casa.json --saida mapa_casa
+    python heatmap_gerador.py --entrada planta_casa.json --tabela medicao.csv --saida mapa_casa
 
 Na janela: escolha o metodo de interpolacao e o estilo visual nos
 seletores da direita; os botoes "Exportar PNG"/"Exportar SVG" salvam o
 arquivo indicado na caixa de texto.
 """
 
-ESTILO_SEGMENTO = {
-    "parede":      {"cor": "black",      "linestyle": "-",         "rotulo": "parede"},
-    "meia_parede": {"cor": "dimgray",    "linestyle": (0, (6, 4)), "rotulo": "meia parede / vao"},
-    "janela":      {"cor": "tab:cyan",   "linestyle": "-",         "rotulo": "janela"},
-    "porta":       {"cor": "tab:orange", "linestyle": "-",         "rotulo": "porta"},
+ESTILO_PAREDE = {
+    "parede":      {"alpha": 0.95, "hatch": None},
+    "meia_parede": {"alpha": 0.45, "hatch": "////"},
+}
+COR_MATERIAL_PAREDE = {
+    "alvenaria": "#6b5b4f",
+    "concreto": "#4a4a4a",
+    "tijolo": "#a0522d",
+    "drywall": "#9e9e9e",
+    "madeira": "#b08355",
+}
+COR_PAREDE_PADRAO = "#4a4a4a"
+
+ESTILO_ABERTURA = {
+    "janela": {"cor": "tab:cyan"},
+    "porta":  {"cor": "tab:orange"},
+    "vao":    {"cor": "gold"},
 }
 
 ESTILO_PONTO = {
@@ -37,6 +50,8 @@ ESTILO_PONTO = {
 CORES_MATERIAL = {
     "metal": "tab:red",
     "vidro": "tab:cyan",
+    "pedra": "tab:gray",
+    "alvenaria": "tab:gray",
 }
 COR_PADRAO = "tab:brown"
 

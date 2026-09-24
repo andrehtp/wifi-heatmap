@@ -6,3 +6,6 @@ __pycache__/
 *.json
 *.svg
 *.png
+*.csv
+!medicao1.csv
+!planta_casa.json

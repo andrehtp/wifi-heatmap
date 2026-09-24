@@ -1,46 +1,48 @@
 """Mascara "dentro do imovel" a partir do contorno real das paredes.
 
-As paredes sao so uma lista de segmentos soltos (sem nocao de poligono
-fechado no modelo de dados), entao dentro/fora e resolvido rasterizando as
-paredes num grid booleano e propagando um flood fill a partir da borda da
-grade (numpy puro + BFS em stdlib, sem scipy/shapely - mesma filosofia do
-resto do pacote, que ja evita scipy.spatial ate pro vizinho-mais-proximo).
+Dentro/fora e resolvido rasterizando as barreiras (paredes em poligono,
+os trechos recortados pelas aberturas e as proprias aberturas, para uma
+porta externa nao "vazar") num grid booleano e propagando um flood fill a
+partir da borda da grade (BFS em stdlib). A rasterizacao usa
+shapely.contains_xy, vetorizado sobre a grade inteira.
 """
 
 from collections import deque
 
 import numpy as np
+import shapely
+from shapely import LineString, Polygon
+from shapely.ops import unary_union
+
+
+def _barreiras(dados, raio):
+    """Uniao de tudo que separa dentro de fora, engrossada por `raio`."""
+    geoms = []
+    for p in dados.get("paredes", []):
+        if "vertices" in p:
+            geoms.append(Polygon(p["vertices"], p.get("furos") or None).buffer(0))
+        else:  # planta antiga, parede em segmento
+            linha = LineString([(p["x1"], p["y1"]), (p["x2"], p["y2"])])
+            geoms.append(linha.buffer(p.get("espessura", 0.1) / 2))
+    for a in dados.get("aberturas", []):
+        geoms += [Polygon(r["vertices"], r.get("furos") or None).buffer(0)
+                  for r in a.get("recorte", [])]
+        geoms.append(LineString([(a["x1"], a["y1"]), (a["x2"], a["y2"])]))
+    return unary_union(geoms).buffer(raio)
 
 
 def _rasterizar_paredes(dados, grid_x, grid_y):
-    """Grade booleana: True nas celulas sobre alguma parede (qualquer tipo)."""
-    paredes = dados.get("paredes", [])
+    """Grade booleana: True nas celulas sobre alguma parede ou abertura."""
     paredes_grid = np.zeros(grid_x.shape, dtype=bool)
-    if not paredes:
+    if not dados.get("paredes"):
         return paredes_grid
 
     largura_celula = grid_x[0, 1] - grid_x[0, 0] if grid_x.shape[1] > 1 else 1.0
     altura_celula = grid_y[1, 0] - grid_y[0, 0] if grid_y.shape[0] > 1 else 1.0
-    raio_minimo = 1.5 * max(abs(largura_celula), abs(altura_celula))
-
-    for p in paredes:
-        x1, y1, x2, y2 = p["x1"], p["y1"], p["x2"], p["y2"]
-        raio = max(p.get("espessura", 0.1) / 2, raio_minimo)
-
-        seg_x, seg_y = x2 - x1, y2 - y1
-        comprimento2 = seg_x**2 + seg_y**2
-        if comprimento2 < 1e-12:
-            dist = np.hypot(grid_x - x1, grid_y - y1)
-        else:
-            t = ((grid_x - x1) * seg_x + (grid_y - y1) * seg_y) / comprimento2
-            t = np.clip(t, 0.0, 1.0)
-            proj_x = x1 + t * seg_x
-            proj_y = y1 + t * seg_y
-            dist = np.hypot(grid_x - proj_x, grid_y - proj_y)
-
-        paredes_grid |= dist <= raio
-
-    return paredes_grid
+    # pouco mais que meia diagonal de celula: parede fina nao deixa o
+    # flood fill passar entre duas celulas vizinhas
+    raio = 0.75 * max(abs(largura_celula), abs(altura_celula))
+    return shapely.contains_xy(_barreiras(dados, raio), grid_x, grid_y)
 
 
 def _preencher_exterior(paredes_grid):

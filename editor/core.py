@@ -5,6 +5,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 from . import constants
+from .distribuicao import MODOS_DISTRIBUICAO
 from .edit_panel import EditPanelMixin
 from .elements import ElementsMixin
 from .events import EventsMixin
@@ -18,7 +19,8 @@ from .widgets import WidgetsMixin
 # arrastaria o grafico em vez de marcar um ponto.
 for _keymap in ("keymap.fullscreen", "keymap.pan", "keymap.save",
                 "keymap.quit", "keymap.grid", "keymap.grid_minor",
-                "keymap.zoom", "keymap.home", "keymap.back", "keymap.forward"):
+                "keymap.zoom", "keymap.home", "keymap.back", "keymap.forward",
+                "keymap.xscale", "keymap.yscale"):
     plt.rcParams[_keymap] = []
 
 
@@ -28,11 +30,14 @@ class PlantaEditor(WidgetsMixin, DrawingMixin, HudMixin, HitTestingMixin,
     def __init__(self, largura, altura, output_path, input_path=None,
                  passo=0.25):
         self.output_path = Path(output_path)
-        self.paredes = []
+        self.paredes = []      # poligonos (ver poligonos.py)
+        self.aberturas = []    # janelas/portas/vaos, em segmento
         self.moveis = []
         self.pontos_medicao = []
+        self.guias = []        # paredes antigas em linha, so como referencia
         self._next_ponto_id = 1
         self._historico = []  # pilha de snapshots completos, para o undo
+        self._arquivo_legado = None  # planta antiga lida: copia antes de salvar
 
         self.modo = None
         self._cliques_pendentes = []
@@ -40,11 +45,29 @@ class PlantaEditor(WidgetsMixin, DrawingMixin, HudMixin, HitTestingMixin,
         self.snap = True
         # cada modo lembra a sua propria escolha de material / tipo
         self._selecao = {modo: 0 for modo in constants.PALETAS}
+        # parametros dos modos, editados nas caixas do painel
+        self.espessura = constants.ESPESSURA_PADRAO
+        self.alinhamento = constants.ALINHAMENTOS[0]
+        self.mostrar_guias = True
+        self._movel_nome = "Movel"
+        self._movel_material = constants.MATERIAIS_MOVEL[0]
+        self._valor_distribuicao = {
+            chave: padrao
+            for chave, (_r, _rv, padrao, _f, _i) in MODOS_DISTRIBUICAO.items()}
+        self._margem_distribuicao = constants.MARGEM_PAREDE_PADRAO
+        # tabela CSV de medicao (modo ponto / tecla t); o caminho que recusou
+        # sobrescrever fica guardado para o proximo "t" confirmar
+        self._caminho_tabela = str(self.output_path.with_name(
+            self.output_path.stem + "_medicao.csv"))
+        self._confirmar_tabela = None
+        self._estado_param = None  # (modo, opcao) que as caixas mostram
+        self._cache_geo = {}       # geometrias derivadas, limpas a cada redesenho
 
         # navegacao (espaco + arrastar / botao do meio / scroll)
         self._espaco = False
         self._timer_espaco = None
         self._pan = None
+        self._arraste = None   # objeto selecionado sendo arrastado
 
         # leitura do cursor (HUD desenhado por blitting)
         self._fundo = None
@@ -70,6 +93,9 @@ class PlantaEditor(WidgetsMixin, DrawingMixin, HudMixin, HitTestingMixin,
         self._configurar_eixos()
         self._painel = self.fig.text(
             0.635, 0.815, "", fontsize=8.5, family="monospace", va="top",
+        )
+        self._painel_teclas = self.fig.text(
+            0.815, 0.815, "", fontsize=8.5, family="monospace", va="top",
         )
         self._titulo_edicao = self.fig.text(
             0.635, 0.822, "", fontsize=8.5, family="monospace", va="top",

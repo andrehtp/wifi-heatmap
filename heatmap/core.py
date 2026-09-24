@@ -14,8 +14,11 @@ from .widgets import WidgetsMixin
 
 
 class HeatmapViewer(WidgetsMixin):
-    def __init__(self, dados, saida_base, metodo="idw", estilo="campo_continuo", area="dentro"):
+    def __init__(self, dados, saida_base, metodo="idw", estilo="campo_continuo",
+                 area="dentro", leituras_por_id=None):
         self.dados = dados
+        # {id: [dBm]} vindo do CSV; None = leituras_dbm do proprio JSON
+        self.leituras_por_id = leituras_por_id
         self.saida_base = saida_base
         self.metodo = metodo
         self.estilo = estilo
@@ -50,13 +53,13 @@ class HeatmapViewer(WidgetsMixin):
         self.ax.set_xlabel("x (m)")
         self.ax.set_ylabel("y (m)")
 
-        coords, valores, _vazios = preparar_amostras(self.dados)
+        coords, valores, _vazios = preparar_amostras(self.dados, self.leituras_por_id)
         cmap = plt.get_cmap(constants.COLORMAP_SINAL)
         mappable = None
 
         if len(coords) == 0:
-            self.ax.set_title("Sem leituras ainda (leituras_dbm vazio em "
-                              "todos os pontos de medicao)", fontsize=10, loc="left")
+            self.ax.set_title("Sem leituras: passe a tabela CSV com --tabela "
+                              "(ids iguais aos dos pontos)", fontsize=10, loc="left")
         else:
             _, funcao_interp = MODOS_INTERPOLACAO[self.metodo]
             rotulo_estilo, funcao_render, tipo_entrada = MODOS_RENDER[self.estilo]
@@ -78,7 +81,7 @@ class HeatmapViewer(WidgetsMixin):
                 f"area: {rotulo_area}   |   {len(coords)} pontos com leitura",
                 fontsize=10, loc="left")
 
-        desenhar_planta_base(self.ax, self.dados)
+        desenhar_planta_base(self.ax, self.dados, self.leituras_por_id)
 
         if mappable is not None:
             self.fig.colorbar(mappable, cax=self._cax, label=constants.ROTULO_COLORBAR)

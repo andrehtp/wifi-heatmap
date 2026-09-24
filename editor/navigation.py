@@ -119,8 +119,11 @@ class NavigationMixin:
     def _enquadrar(self):
         xs, ys = [], []
         for p in self.paredes:
-            xs += [p["x1"], p["x2"]]
-            ys += [p["y1"], p["y2"]]
+            xs += [v[0] for v in p["vertices"]]
+            ys += [v[1] for v in p["vertices"]]
+        for seg in self.aberturas + (self.guias if self.mostrar_guias else []):
+            xs += [seg["x1"], seg["x2"]]
+            ys += [seg["y1"], seg["y2"]]
         for m in self.moveis:
             xs += [m["x"], m["x"] + m["largura"]]
             ys += [m["y"], m["y"] + m["profundidade"]]

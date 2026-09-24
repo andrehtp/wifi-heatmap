@@ -5,21 +5,29 @@ import numpy as np
 from .constants import MARGEM_GRADE, RESOLUCAO_GRADE
 
 
-def preparar_amostras(dados):
+def leituras_do_ponto(pt, leituras_por_id=None):
+    """Leituras em dBm de um ponto: da tabela CSV (pelo id) ou, sem tabela,
+    do campo leituras_dbm das plantas antigas."""
+    if leituras_por_id is None:
+        return pt.get("leituras_dbm") or []
+    return leituras_por_id.get(pt["id"], [])
+
+
+def preparar_amostras(dados, leituras_por_id=None):
     """Separa os pontos de medicao em amostras com dado e vazios.
 
     Retorna (coords, valores, vazios):
-      coords: (N, 2) - x,y dos pontos com leituras_dbm nao vazio
-      valores: (N,)  - media de leituras_dbm de cada um
+      coords: (N, 2) - x,y dos pontos com leitura
+      valores: (N,)  - media das leituras de cada um
       vazios:  (M, 2) - x,y dos pontos de medicao ainda sem leitura
 
     Pontos access_point nunca entram como fonte de dado.
     """
     coords, valores, vazios = [], [], []
     for pt in dados.get("pontos_medicao", []):
-        if pt.get("tipo") != "medicao":
+        if pt.get("tipo", "medicao") != "medicao":
             continue
-        leituras = pt.get("leituras_dbm") or []
+        leituras = leituras_do_ponto(pt, leituras_por_id)
         if leituras:
             coords.append((pt["x"], pt["y"]))
             valores.append(float(np.mean(leituras)))
@@ -33,8 +41,15 @@ def extents(dados, margem=MARGEM_GRADE):
     """Bounding box (xmin, xmax, ymin, ymax) a partir de paredes/moveis/pontos."""
     xs, ys = [], []
     for p in dados.get("paredes", []):
-        xs += [p["x1"], p["x2"]]
-        ys += [p["y1"], p["y2"]]
+        if "vertices" in p:
+            xs += [v[0] for v in p["vertices"]]
+            ys += [v[1] for v in p["vertices"]]
+        else:  # planta antiga, parede em segmento
+            xs += [p["x1"], p["x2"]]
+            ys += [p["y1"], p["y2"]]
+    for a in dados.get("aberturas", []):
+        xs += [a["x1"], a["x2"]]
+        ys += [a["y1"], a["y2"]]
     for m in dados.get("moveis", []):
         xs += [m["x"], m["x"] + m["largura"]]
         ys += [m["y"], m["y"] + m["profundidade"]]

@@ -1,17 +1,46 @@
 """Desenho do plano (paredes, moveis, pontos) e HUD do cursor em tempo real."""
 
+import numpy as np
 from matplotlib.lines import Line2D
-from matplotlib.patches import Rectangle
+from matplotlib.patches import Patch, PathPatch, Rectangle
+from matplotlib.path import Path
 from matplotlib.ticker import MultipleLocator
+from shapely import Point, Polygon
+from shapely.geometry.polygon import orient
 
 from .constants import (
+    COR_MATERIAL_PAREDE,
+    COR_PAREDE_PADRAO,
     CORES_MATERIAL,
     COR_PADRAO,
+    ESTILO_ABERTURA,
+    ESTILO_GUIA,
+    ESTILO_PAREDE,
     ESTILO_PONTO,
-    ESTILO_SEGMENTO,
+    MODOS_ABERTURA,
+    MODOS_PAREDE,
     PASSOS_GRADE,
+    ROTULO_MOVEL,
     TECLAS_MODO,
 )
+from .distribuicao import MODOS_DISTRIBUICAO
+from .poligonos import (
+    bordas,
+    corrigir,
+    para_shapely,
+    parede_de_polilinha,
+    poligonos,
+    ponto_em_aresta,
+)
+
+
+def caminho_poligono(pol):
+    """Path do matplotlib para um Polygon shapely (com furos)."""
+    pol = orient(pol)
+    return Path.make_compound_path(*[
+        Path(np.asarray(anel.coords), closed=True)
+        for anel in (pol.exterior, *pol.interiors)])
+
 
 # ---------------------------------------------------------------------- #
 # Configuracao / desenho
@@ -39,24 +68,53 @@ class DrawingMixin:
         self.ax.grid(True, which="minor", linestyle=":",
                      linewidth=0.4, alpha=0.3)
 
+    # ------------------------------------------------------------------ #
+    # Snap
+    # ------------------------------------------------------------------ #
     def _vertices_existentes(self):
         """Todos os pontos ja definidos, para o clique se encaixar neles."""
-        for p in self.paredes:
-            yield (p["x1"], p["y1"])
-            yield (p["x2"], p["y2"])
-        for m in self.moveis:
+        ignorar = None
+        if self._arraste is not None:
+            ignorar = (self._arraste["categoria"], self._arraste["indice"])
+        for i, p in enumerate(self.paredes):
+            if ("parede", i) == ignorar:
+                continue
+            for anel in (p["vertices"], *p.get("furos", [])):
+                for vx, vy in anel:
+                    yield (vx, vy)
+        if self.mostrar_guias:
+            for g in self.guias:
+                yield (g["x1"], g["y1"])
+                yield (g["x2"], g["y2"])
+        for i, a in enumerate(self.aberturas):
+            if ("abertura", i) != ignorar:
+                yield (a["x1"], a["y1"])
+                yield (a["x2"], a["y2"])
+        for i, m in enumerate(self.moveis):
+            if ("movel", i) == ignorar:
+                continue
             x0, y0 = m["x"], m["y"]
             x1, y1 = x0 + m["largura"], y0 + m["profundidade"]
             yield (x0, y0)
             yield (x1, y0)
             yield (x1, y1)
             yield (x0, y1)
-        for pt in self.pontos_medicao:
-            yield (pt["x"], pt["y"])
+        for i, pt in enumerate(self.pontos_medicao):
+            if ("ponto", i) != ignorar:
+                yield (pt["x"], pt["y"])
         yield from self._cliques_pendentes
 
+    def _bordas(self):
+        if "bordas" not in self._cache_geo:
+            guias = self.guias if self.mostrar_guias else []
+            self._cache_geo["bordas"] = bordas(self.paredes, guias)
+        return self._cache_geo["bordas"]
+
+    def _na_grade(self, v):
+        return round(round(v / self.passo) * self.passo, 3)
+
     def _encaixar(self, x, y):
-        """Encaixa o clique em um vertice proximo ou no ponto de grade."""
+        """Encaixa o clique num vertice, numa aresta ou no ponto de grade."""
         if not self.snap:
             return round(x, 2), round(y, 2)
 
@@ -69,8 +127,25 @@ class DrawingMixin:
         if melhor is not None:
             return melhor
 
-        return (round(round(x / self.passo) * self.passo, 3),
-                round(round(y / self.passo) * self.passo, 3))
+        # aresta de parede/guia (desligado ao arrastar uma parede, que
+        # grudaria nas proprias arestas)
+        arrastando_parede = (self._arraste is not None
+                             and self._arraste["categoria"] == "parede")
+        if not arrastando_parede:
+            aresta = ponto_em_aresta(x, y, self._bordas(), self.passo / 3)
+            if aresta is not None:
+                qx, qy = aresta
+                # de preferencia um ponto que esteja na aresta E na grade
+                geo = self._bordas()
+                candidatos = [c for c in ((self._na_grade(qx), qy),
+                                          (qx, self._na_grade(qy)))
+                              if geo.distance(Point(c)) < 1e-6]
+                if candidatos:
+                    qx, qy = min(candidatos, key=lambda c: (c[0] - qx) ** 2
+                                 + (c[1] - qy) ** 2)
+                return round(qx, 3), round(qy, 3)
+
+        return self._na_grade(x), self._na_grade(y)
 
     def _mudar_passo(self, direcao):
         atual = min(range(len(PASSOS_GRADE)),
@@ -81,36 +156,51 @@ class DrawingMixin:
         self._redesenhar()
 
     def _cliques_necessarios(self):
-        if self.modo == "ponto":
+        """Cliques que o modo atual precisa; None = quantos quiser (enter)."""
+        if self.modo in ("ponto", "distribuir"):
             return 1
+        if self.modo in MODOS_PAREDE:
+            return None
         if self.modo is None:
             return 0
         return 2
 
+    # ------------------------------------------------------------------ #
+    # Titulo e painel lateral
+    # ------------------------------------------------------------------ #
+    def _rotulo_opcao(self, modo, opcao):
+        if modo == "distribuir":
+            return MODOS_DISTRIBUICAO[opcao][0]
+        if modo == "movel":
+            return ROTULO_MOVEL[opcao]
+        return opcao.replace("_", " ")
+
     def _atualizar_titulo(self):
-        modo_txt = self.modo or "nenhum (w m j d f p)"
+        modo_txt = self.modo or "nenhum"
         opcao = self._opcao_atual()
         if opcao:
-            modo_txt = f"{modo_txt} ({opcao})"
+            modo_txt = f"{modo_txt} ({self._rotulo_opcao(self.modo, opcao)})"
         pendente = ""
         if self._cliques_pendentes:
-            pendente = (f"   |   clique {len(self._cliques_pendentes)}/"
-                        f"{self._cliques_necessarios()} (u desfaz)")
+            n = len(self._cliques_pendentes)
+            total = self._cliques_necessarios()
+            pendente = (f"  |  clique {n}/{total} (u desfaz)" if total
+                        else f"  |  {n} vertice(s), enter conclui")
         n_ap = sum(1 for p in self.pontos_medicao
                    if p.get("tipo", "medicao") == "access_point")
         n_medicao = len(self.pontos_medicao) - n_ap
         snap_txt = f"snap {self.passo:g} m" if self.snap else "snap off"
         self.ax.set_title(
-            f"modo: {modo_txt}   |   {snap_txt}   |   "
-            f"paredes: {len(self.paredes)}  moveis: {len(self.moveis)}  "
-            f"pontos: {n_medicao} medicao + {n_ap} ap"
+            f"modo: {modo_txt}  |  {snap_txt}  |  "
+            f"{len(self.paredes)} paredes, {len(self.aberturas)} aberturas, "
+            f"{len(self.moveis)} moveis, {n_medicao}+{n_ap}ap pontos"
             f"{pendente}",
-            fontsize=10, loc="left",
+            fontsize=8, loc="left",
         )
         self.fig.canvas.draw_idle()
 
     def _atualizar_painel(self):
-        """Painel lateral: modos, paleta atual e demais teclas."""
+        """Painel lateral: modos e paleta (esquerda), teclas (direita)."""
         linhas = ["MODOS"]
         for tecla, modo in TECLAS_MODO.items():
             marca = ">" if modo == self.modo else " "
@@ -119,37 +209,47 @@ class DrawingMixin:
         paleta = self._paleta()
         if paleta is not None:
             rotulo, opcoes = paleta
-            linhas += ["", f"{rotulo.upper()} (teclas 1-{len(opcoes)})"]
+            linhas += ["", f"{rotulo.upper()} (1-{len(opcoes)})"]
             for i, opcao in enumerate(opcoes, start=1):
                 marca = ">" if i - 1 == self._selecao[self.modo] else " "
-                linhas.append(f" {marca} {i}  {opcao}")
+                linhas.append(f" {marca} {i}  {self._rotulo_opcao(self.modo, opcao)}")
         else:
-            linhas += ["", "(escolha um modo para ver",
-                       " os materiais disponiveis)"]
+            linhas += ["", "(escolha um modo)"]
+        self._painel.set_text("\n".join(linhas))
 
-        linhas += [
-            "",
+        guias = "on" if self.mostrar_guias else "off"
+        self._painel_teclas.set_text("\n".join([
             "MOUSE",
-            " esq     marcar ponto",
-            " dir     editar objeto sob o cursor",
-            " scroll  zoom no cursor",
-            " espaco + arrastar  mover a vista",
-            " (ou arrastar com o botao do meio)",
+            " esq    marcar",
+            " dir    editar objeto",
+            " arrastar  mover o",
+            "   objeto em edicao",
+            " scroll zoom",
+            " espaco+arrastar  pan",
             "",
+            "TECLAS",
+            "enter concluir parede",
+            "l    alinhamento",
+            f"h    guias: {guias}",
             "u    desfazer",
             "esc  cancelar cliques",
             f"g    snap: {'on' if self.snap else 'off'}",
             f"[ ]  passo: {self.passo:g} m",
-            "0    enquadrar a vista",
+            "0    enquadrar",
+            "t    gerar tabela CSV",
             "s    salvar",
             "q    salvar e sair",
-        ]
-        self._painel.set_text("\n".join(linhas))
+        ]))
+        self._atualizar_parametros()
         self._atualizar_titulo()
 
+    # ------------------------------------------------------------------ #
+    # Desenho completo
+    # ------------------------------------------------------------------ #
     def _redesenhar(self):
         xlim, ylim = self.ax.get_xlim(), self.ax.get_ylim()
         self._fundo = None  # o fundo guardado para o blit ficou obsoleto
+        self._cache_geo = {}  # paredes/aberturas podem ter mudado
         self.ax.cla()
         self.ax.set_xlim(xlim)
         self.ax.set_ylim(ylim)
@@ -159,46 +259,68 @@ class DrawingMixin:
         self.ax.set_xlabel("x (m)")
         self.ax.set_ylabel("y (m)")
 
-        tipos_desenhados = set()
-        for p in self.paredes:
-            tipo = p.get("tipo", "parede")
-            estilo = ESTILO_SEGMENTO.get(tipo, ESTILO_SEGMENTO["parede"])
-            tipos_desenhados.add(tipo)
-            xs, ys = [p["x1"], p["x2"]], [p["y1"], p["y2"]]
+        handles = []
+        if self.mostrar_guias and self.guias:
+            for g in self.guias:
+                self.ax.plot([g["x1"], g["x2"]], [g["y1"], g["y2"]],
+                             color=ESTILO_GUIA["cor"],
+                             linestyle=ESTILO_GUIA["linestyle"],
+                             linewidth=ESTILO_GUIA["linewidth"], zorder=1)
+            handles.append(Line2D([], [], color=ESTILO_GUIA["cor"],
+                                  linestyle=ESTILO_GUIA["linestyle"],
+                                  label="guia (parede antiga)"))
 
-            if tipo in ("janela", "porta"):
-                # a abertura "corta" a parede: apaga o trecho e desenha por cima
-                largura = max(4.0, p["espessura"] * 20)
-                self.ax.plot(xs, ys, color="white", linewidth=largura + 2.5,
-                             solid_capstyle="butt", zorder=4)
-                self.ax.plot(xs, ys, color=estilo["cor"], linewidth=largura,
-                             solid_capstyle="butt", zorder=5)
-                continue
+        paredes_desenhadas = set()
+        for p, pol in zip(self.paredes, self._paredes_geo()):
+            estilo = ESTILO_PAREDE.get(p["tipo"], ESTILO_PAREDE["parede"])
+            cor = COR_MATERIAL_PAREDE.get(p["material"], COR_PAREDE_PADRAO)
+            paredes_desenhadas.add((p["tipo"], p["material"]))
+            self.ax.add_patch(PathPatch(
+                caminho_poligono(pol), facecolor=cor, edgecolor=cor,
+                alpha=estilo["alpha"], hatch=estilo["hatch"],
+                linewidth=0.6, zorder=3))
+        for tipo, material in sorted(paredes_desenhadas):
+            estilo = ESTILO_PAREDE.get(tipo, ESTILO_PAREDE["parede"])
+            cor = COR_MATERIAL_PAREDE.get(material, COR_PAREDE_PADRAO)
+            handles.append(Patch(facecolor=cor, edgecolor=cor,
+                                 alpha=estilo["alpha"], hatch=estilo["hatch"],
+                                 label=f"{estilo['rotulo']} {material}"))
 
-            self.ax.plot(
-                xs, ys,
-                color=estilo["cor"], linestyle=estilo["linestyle"],
-                linewidth=max(1.5, p["espessura"] * 20),
-                solid_capstyle="butt", zorder=3,
-            )
+        aberturas_desenhadas = set()
+        for a in self.aberturas:
+            estilo = ESTILO_ABERTURA.get(a["tipo"], ESTILO_ABERTURA["porta"])
+            aberturas_desenhadas.add(a["tipo"])
+            vidro = str(a.get("material", "")).startswith("vidro")
+            for r in a.get("recorte", []):
+                self.ax.add_patch(PathPatch(
+                    caminho_poligono(para_shapely(r)), facecolor=estilo["cor"],
+                    edgecolor=estilo["cor"], alpha=0.35,
+                    hatch=".." if vidro else None, linewidth=0.8, zorder=4))
+            self.ax.plot([a["x1"], a["x2"]], [a["y1"], a["y2"]],
+                         color=estilo["cor"], linewidth=2.5,
+                         linestyle=":" if a["tipo"] == "vao" else "-",
+                         solid_capstyle="butt", zorder=5)
+        handles += [
+            Line2D([], [], color=ESTILO_ABERTURA[t]["cor"], linewidth=2.5,
+                   label=ESTILO_ABERTURA[t]["rotulo"])
+            for t in ESTILO_ABERTURA if t in aberturas_desenhadas]
 
         for m in self.moveis:
             cor = CORES_MATERIAL.get(m["material"], COR_PADRAO)
-            rect = Rectangle(
+            self.ax.add_patch(Rectangle(
                 (m["x"], m["y"]), m["largura"], m["profundidade"],
-                facecolor=cor, alpha=0.4, edgecolor=cor,
-            )
-            self.ax.add_patch(rect)
+                facecolor=cor, alpha=0.4, edgecolor=cor, zorder=2))
             self.ax.text(
                 m["x"] + m["largura"] / 2, m["y"] + m["profundidade"] / 2,
-                m["tipo"], ha="center", va="center", fontsize=8,
+                m.get("nome", m["tipo"]), ha="center", va="center",
+                fontsize=7, zorder=6, clip_on=True,
             )
 
-        tipos_ponto_desenhados = set()
+        tipos_ponto = set()
         for pt in self.pontos_medicao:
             tipo = pt.get("tipo", "medicao")
             estilo = ESTILO_PONTO.get(tipo, ESTILO_PONTO["medicao"])
-            tipos_ponto_desenhados.add(tipo)
+            tipos_ponto.add(tipo)
             self.ax.scatter([pt["x"]], [pt["y"]], color=estilo["cor"],
                             marker=estilo["marcador"], zorder=7)
             self.ax.annotate(
@@ -206,24 +328,15 @@ class DrawingMixin:
                 textcoords="offset points", xytext=(5, 5),
                 fontsize=8, color=estilo["cor"],
             )
+        handles += [
+            Line2D([], [], color=ESTILO_PONTO[t]["cor"],
+                   marker=ESTILO_PONTO[t]["marcador"], linestyle="none",
+                   label=ESTILO_PONTO[t]["rotulo"])
+            for t in ESTILO_PONTO if t in tipos_ponto]
 
-        if tipos_desenhados or tipos_ponto_desenhados:
-            handles = [
-                Line2D([], [], color=ESTILO_SEGMENTO[t]["cor"],
-                       linestyle=ESTILO_SEGMENTO[t]["linestyle"],
-                       linewidth=2, label=ESTILO_SEGMENTO[t]["rotulo"])
-                for t in ESTILO_SEGMENTO if t in tipos_desenhados
-            ]
-            handles += [
-                Line2D([], [], color=ESTILO_PONTO[t]["cor"],
-                       marker=ESTILO_PONTO[t]["marcador"], linestyle="none",
-                       label=ESTILO_PONTO[t]["rotulo"])
-                for t in ESTILO_PONTO if t in tipos_ponto_desenhados
-            ]
-            self.ax.legend(
-                handles=handles,
-                loc="upper right", fontsize=7, framealpha=0.8,
-            )
+        if handles:
+            self.ax.legend(handles=handles, loc="upper right", fontsize=7,
+                           framealpha=0.8)
 
         self._desenhar_selecao()
         self._desenhar_cliques_pendentes()
@@ -241,10 +354,33 @@ class DrawingMixin:
                      marker="o", markersize=7, zorder=2,
                      solid_capstyle="round")
 
+    def _previa_parede(self, cliques):
+        """Poligono que a parede em construcao vai virar, ou None."""
+        try:
+            if self.modo == "contorno":
+                if len(cliques) < 3:
+                    return None
+                return corrigir(Polygon(cliques))
+            if len(cliques) < 2:
+                return None
+            return parede_de_polilinha(cliques, self.espessura,
+                                       self.alinhamento,
+                                       existentes=self._paredes_geo())
+        except (ValueError, TypeError):
+            return None
+
     def _desenhar_cliques_pendentes(self):
         """Marca em laranja os cliques ja dados no elemento em construcao."""
         if not self._cliques_pendentes:
             return
+
+        if self.modo in MODOS_PAREDE:
+            previa = self._previa_parede(self._cliques_pendentes)
+            for pol in poligonos(previa):
+                self.ax.add_patch(PathPatch(
+                    caminho_poligono(pol), facecolor="tab:orange",
+                    edgecolor="tab:orange", alpha=0.3, linestyle="--",
+                    zorder=6))
 
         xs = [c[0] for c in self._cliques_pendentes]
         ys = [c[1] for c in self._cliques_pendentes]
@@ -286,6 +422,11 @@ class HudMixin:
             marker="o", markersize=8, zorder=8,
             animated=True, visible=False)
         self.ax.add_line(self._realce)
+        # linha elastica do ultimo clique pendente ate a mira
+        self._elastico = Line2D(
+            [], [], color="tab:orange", linewidth=1.2, linestyle="--",
+            zorder=8, animated=True, visible=False)
+        self.ax.add_line(self._elastico)
         self._rotulo = self.ax.text(
             0.0, 0.0, "", fontsize=8, family="monospace", zorder=11,
             animated=True, visible=False, clip_on=True,
@@ -293,7 +434,7 @@ class HudMixin:
                       edgecolor="tab:green", alpha=0.9),
         )
         self._hud = [self._mira_v, self._mira_h, self._realce,
-                     self._marca, self._rotulo]
+                     self._elastico, self._marca, self._rotulo]
 
     def _on_draw(self, event):
         self._fundo = self.fig.canvas.copy_from_bbox(self.fig.bbox)
@@ -331,10 +472,18 @@ class HudMixin:
         for artista in (self._mira_v, self._mira_h, self._marca):
             artista.set_visible(True)
 
+        if self._cliques_pendentes and self.modo is not None \
+                and self.modo not in ("ponto", "distribuir"):
+            ux, uy = self._cliques_pendentes[-1]
+            self._elastico.set_data([ux, xs], [uy, ys])
+            self._elastico.set_visible(True)
+        else:
+            self._elastico.set_visible(False)
+
         alvo = self._objeto_sob(x, y)
         if alvo is None:
             self._realce.set_visible(False)
-            descricao = "-"
+            descricao = self._descricao_comodo(x, y) or "-"
         else:
             rx, ry = self._pontos_realce(*alvo)
             self._realce.set_data(rx, ry)
@@ -345,8 +494,13 @@ class HudMixin:
         px, py = self.ax.transData.transform((x, y))
         self._rotulo.set_position(
             self.ax.transData.inverted().transform((px + 12, py + 12)))
+        extra = ""
+        if self._cliques_pendentes and self.modo in MODOS_PAREDE + MODOS_ABERTURA:
+            ux, uy = self._cliques_pendentes[-1]
+            extra = f"  +{np.hypot(xs - ux, ys - uy):.2f} m"
         self._rotulo.set_text(
-            f"({xs:.2f}, {ys:.2f})" + ("" if alvo is None else f"\n{descricao}"))
+            f"({xs:.2f}, {ys:.2f}){extra}"
+            + ("" if descricao == "-" else f"\n{descricao}"))
         self._rotulo.set_visible(True)
 
         snap_txt = f"snap {self.passo:g} m" if self.snap else "snap off"

@@ -2,29 +2,54 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
+from matplotlib.patches import PathPatch, Rectangle
+from matplotlib.path import Path
+from shapely import Polygon
+from shapely.geometry.polygon import orient
 
-from .constants import CORES_MATERIAL, COR_PADRAO, ESTILO_PONTO, ESTILO_SEGMENTO
+from .constants import (
+    COR_MATERIAL_PAREDE,
+    COR_PAREDE_PADRAO,
+    CORES_MATERIAL,
+    COR_PADRAO,
+    ESTILO_ABERTURA,
+    ESTILO_PAREDE,
+    ESTILO_PONTO,
+)
+from .interpolation import leituras_do_ponto
 
 
-def desenhar_planta_base(ax, dados):
+def _caminho(dic):
+    """Path do matplotlib para um poligono {"vertices", "furos"} do JSON."""
+    pol = orient(Polygon(dic["vertices"], dic.get("furos") or None))
+    return Path.make_compound_path(*[
+        Path(np.asarray(anel.coords), closed=True)
+        for anel in (pol.exterior, *pol.interiors)])
+
+
+def desenhar_planta_base(ax, dados, leituras_por_id=None):
     """Reproducao somente-leitura de DrawingMixin._redesenhar (editor/rendering.py)."""
     for p in dados.get("paredes", []):
-        tipo = p.get("tipo", "parede")
-        estilo = ESTILO_SEGMENTO.get(tipo, ESTILO_SEGMENTO["parede"])
-        xs, ys = [p["x1"], p["x2"]], [p["y1"], p["y2"]]
+        estilo = ESTILO_PAREDE.get(p.get("tipo"), ESTILO_PAREDE["parede"])
+        cor = COR_MATERIAL_PAREDE.get(p.get("material"), COR_PAREDE_PADRAO)
+        if "vertices" in p:
+            ax.add_patch(PathPatch(
+                _caminho(p), facecolor=cor, edgecolor=cor,
+                alpha=estilo["alpha"], hatch=estilo["hatch"],
+                linewidth=0.6, zorder=3))
+        else:  # planta antiga, parede em segmento
+            ax.plot([p["x1"], p["x2"]], [p["y1"], p["y2"]], color="black",
+                    linewidth=max(1.5, p.get("espessura", 0.1) * 20),
+                    solid_capstyle="butt", zorder=3)
 
-        if tipo in ("janela", "porta"):
-            largura = max(4.0, p["espessura"] * 20)
-            ax.plot(xs, ys, color="white", linewidth=largura + 2.5,
-                    solid_capstyle="butt", zorder=4)
-            ax.plot(xs, ys, color=estilo["cor"], linewidth=largura,
-                    solid_capstyle="butt", zorder=5)
-            continue
-
-        ax.plot(xs, ys, color=estilo["cor"], linestyle=estilo["linestyle"],
-                linewidth=max(1.5, p["espessura"] * 20),
-                solid_capstyle="butt", zorder=3)
+    for a in dados.get("aberturas", []):
+        cor = ESTILO_ABERTURA.get(a.get("tipo"), ESTILO_ABERTURA["porta"])["cor"]
+        for r in a.get("recorte", []):
+            ax.add_patch(PathPatch(_caminho(r), facecolor=cor, edgecolor=cor,
+                                   alpha=0.35, linewidth=0.8, zorder=4))
+        ax.plot([a["x1"], a["x2"]], [a["y1"], a["y2"]], color=cor,
+                linewidth=2.5, linestyle=":" if a.get("tipo") == "vao" else "-",
+                solid_capstyle="butt", zorder=5)
 
     for m in dados.get("moveis", []):
         cor = CORES_MATERIAL.get(m["material"], COR_PADRAO)
@@ -35,7 +60,7 @@ def desenhar_planta_base(ax, dados):
     for pt in dados.get("pontos_medicao", []):
         tipo = pt.get("tipo", "medicao")
         estilo = ESTILO_PONTO.get(tipo, ESTILO_PONTO["medicao"])
-        tem_leitura = bool(pt.get("leituras_dbm"))
+        tem_leitura = bool(leituras_do_ponto(pt, leituras_por_id))
         if tipo == "medicao" and not tem_leitura:
             ax.scatter([pt["x"]], [pt["y"]], facecolors="none",
                        edgecolors=estilo["cor"], marker=estilo["marcador"],
