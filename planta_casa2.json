@@ -1,0 +1,1587 @@
+{
+  "paredes": [
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          2.9,
+          3.0
+        ],
+        [
+          2.9,
+          3.15
+        ],
+        [
+          0.0,
+          3.15
+        ],
+        [
+          0.0,
+          3.0
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          0.0,
+          3.0
+        ],
+        [
+          0.0,
+          7.05
+        ],
+        [
+          -0.15,
+          7.05
+        ],
+        [
+          -0.15,
+          3.0
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          -0.15,
+          7.05
+        ],
+        [
+          2.9,
+          7.05
+        ],
+        [
+          2.9,
+          7.2
+        ],
+        [
+          -0.15,
+          7.2
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          3.05,
+          3.15
+        ],
+        [
+          2.9,
+          3.15
+        ],
+        [
+          2.9,
+          1.3
+        ],
+        [
+          3.05,
+          1.3
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          2.9,
+          7.2
+        ],
+        [
+          2.9,
+          5.5
+        ],
+        [
+          3.05,
+          5.5
+        ],
+        [
+          3.05,
+          7.2
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          3.8,
+          5.65
+        ],
+        [
+          3.05,
+          5.65
+        ],
+        [
+          3.05,
+          5.5
+        ],
+        [
+          3.8,
+          5.5
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          2.9,
+          4.35
+        ],
+        [
+          2.9,
+          3.15
+        ],
+        [
+          3.05,
+          3.15
+        ],
+        [
+          3.05,
+          4.35
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          4.6,
+          1.3
+        ],
+        [
+          4.6,
+          4.35
+        ],
+        [
+          4.45,
+          4.35
+        ],
+        [
+          4.45,
+          1.3
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          4.45,
+          1.3
+        ],
+        [
+          4.45,
+          1.45
+        ],
+        [
+          2.9,
+          1.45
+        ],
+        [
+          2.9,
+          1.3
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          7.95,
+          1.45
+        ],
+        [
+          4.45,
+          1.45
+        ],
+        [
+          4.45,
+          1.3
+        ],
+        [
+          7.95,
+          1.3
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          7.8,
+          1.3
+        ],
+        [
+          7.95,
+          1.3
+        ],
+        [
+          7.95,
+          4.35
+        ],
+        [
+          7.8,
+          4.35
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          7.95,
+          4.5
+        ],
+        [
+          5.501,
+          4.5
+        ],
+        [
+          5.501,
+          4.35
+        ],
+        [
+          7.95,
+          4.35
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          4.45,
+          4.35
+        ],
+        [
+          4.703,
+          4.35
+        ],
+        [
+          4.703,
+          4.5
+        ],
+        [
+          4.45,
+          4.5
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          3.8,
+          7.2
+        ],
+        [
+          3.8,
+          5.5
+        ],
+        [
+          3.95,
+          5.5
+        ],
+        [
+          3.95,
+          7.2
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          6.9,
+          7.2
+        ],
+        [
+          3.95,
+          7.2
+        ],
+        [
+          3.95,
+          7.05
+        ],
+        [
+          6.9,
+          7.05
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          3.95,
+          5.5
+        ],
+        [
+          5.947,
+          5.5
+        ],
+        [
+          5.947,
+          5.65
+        ],
+        [
+          3.95,
+          5.65
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          6.9,
+          5.65
+        ],
+        [
+          6.648,
+          5.65
+        ],
+        [
+          6.648,
+          5.5
+        ],
+        [
+          6.9,
+          5.5
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          6.75,
+          5.65
+        ],
+        [
+          6.9,
+          5.65
+        ],
+        [
+          6.9,
+          7.05
+        ],
+        [
+          6.75,
+          7.05
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          7.95,
+          -0.15
+        ],
+        [
+          7.95,
+          1.3
+        ],
+        [
+          7.8,
+          1.3
+        ],
+        [
+          7.8,
+          -0.15
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          7.95,
+          0.0
+        ],
+        [
+          7.95,
+          -0.15
+        ],
+        [
+          11.0,
+          -0.15
+        ],
+        [
+          11.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          10.85,
+          1.3
+        ],
+        [
+          10.849,
+          0.0
+        ],
+        [
+          11.0,
+          0.0
+        ],
+        [
+          11.0,
+          1.3
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          11.0,
+          1.45
+        ],
+        [
+          10.349,
+          1.45
+        ],
+        [
+          10.349,
+          1.3
+        ],
+        [
+          11.0,
+          1.3
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          7.95,
+          1.3
+        ],
+        [
+          8.75,
+          1.3
+        ],
+        [
+          8.75,
+          1.45
+        ],
+        [
+          7.95,
+          1.45
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          11.0,
+          1.45
+        ],
+        [
+          11.0,
+          1.3
+        ],
+        [
+          12.85,
+          1.3
+        ],
+        [
+          12.85,
+          1.45
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          12.7,
+          1.45
+        ],
+        [
+          12.85,
+          1.45
+        ],
+        [
+          12.85,
+          6.75
+        ],
+        [
+          12.7,
+          6.75
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          12.7,
+          6.6
+        ],
+        [
+          12.7,
+          6.75
+        ],
+        [
+          10.3,
+          6.75
+        ],
+        [
+          10.3,
+          6.6
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          10.3,
+          5.65
+        ],
+        [
+          10.3,
+          6.75
+        ],
+        [
+          10.15,
+          6.75
+        ],
+        [
+          10.15,
+          5.65
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          10.85,
+          5.15
+        ],
+        [
+          10.85,
+          5.3
+        ],
+        [
+          10.65,
+          5.3
+        ],
+        [
+          10.65,
+          5.15
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          10.3,
+          5.65
+        ],
+        [
+          10.15,
+          5.65
+        ],
+        [
+          10.15,
+          5.6
+        ],
+        [
+          10.6,
+          5.15
+        ],
+        [
+          10.65,
+          5.15
+        ],
+        [
+          10.65,
+          5.3
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          10.3,
+          7.2
+        ],
+        [
+          9.998,
+          7.2
+        ],
+        [
+          9.998,
+          7.05
+        ],
+        [
+          10.3,
+          7.05
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          6.9,
+          7.05
+        ],
+        [
+          9.098,
+          7.05
+        ],
+        [
+          9.098,
+          7.2
+        ],
+        [
+          6.9,
+          7.2
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          10.3,
+          7.05
+        ],
+        [
+          10.149,
+          7.05
+        ],
+        [
+          10.15,
+          6.75
+        ],
+        [
+          10.3,
+          6.75
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          10.85,
+          4.05
+        ],
+        [
+          10.85,
+          1.45
+        ],
+        [
+          11.0,
+          1.45
+        ],
+        [
+          11.0,
+          4.05
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          4.6,
+          4.5
+        ],
+        [
+          4.6004,
+          4.6
+        ],
+        [
+          4.45,
+          4.6007
+        ],
+        [
+          4.45,
+          4.5
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          4.45,
+          5.5
+        ],
+        [
+          4.45,
+          5.4038
+        ],
+        [
+          4.6036,
+          5.403
+        ],
+        [
+          4.604,
+          5.5
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          2.9,
+          4.35
+        ],
+        [
+          3.15,
+          4.35
+        ],
+        [
+          3.15,
+          4.5
+        ],
+        [
+          2.9,
+          4.5
+        ]
+      ]
+    },
+    {
+      "tipo": "parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          4.45,
+          4.5
+        ],
+        [
+          3.85,
+          4.5
+        ],
+        [
+          3.85,
+          4.35
+        ],
+        [
+          4.45,
+          4.35
+        ]
+      ]
+    },
+    {
+      "tipo": "meia_parede",
+      "material": "alvenaria",
+      "vertices": [
+        [
+          12.0,
+          3.25
+        ],
+        [
+          12.7,
+          3.25
+        ],
+        [
+          12.7,
+          3.401
+        ],
+        [
+          12.0,
+          3.4
+        ]
+      ]
+    }
+  ],
+  "aberturas": [
+    {
+      "tipo": "porta",
+      "material": "madeira",
+      "x1": 4.6,
+      "y1": 4.6,
+      "x2": 4.604,
+      "y2": 5.403,
+      "recorte": [
+        {
+          "tipo": "parede",
+          "material": "alvenaria",
+          "vertices": [
+            [
+              4.6004,
+              4.6
+            ],
+            [
+              4.6036,
+              5.403
+            ],
+            [
+              4.45,
+              5.4038
+            ],
+            [
+              4.45,
+              4.6007
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "tipo": "porta",
+      "material": "madeira",
+      "x1": 3.15,
+      "y1": 4.5,
+      "x2": 3.85,
+      "y2": 4.5,
+      "recorte": [
+        {
+          "tipo": "parede",
+          "material": "alvenaria",
+          "vertices": [
+            [
+              3.15,
+              4.35
+            ],
+            [
+              3.85,
+              4.35
+            ],
+            [
+              3.85,
+              4.5
+            ],
+            [
+              3.15,
+              4.5
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "tipo": "porta",
+      "material": "madeira",
+      "x1": 4.703,
+      "y1": 4.5,
+      "x2": 5.501,
+      "y2": 4.5,
+      "recorte": [
+        {
+          "tipo": "parede",
+          "material": "alvenaria",
+          "vertices": [
+            [
+              5.501,
+              4.5
+            ],
+            [
+              4.703,
+              4.5
+            ],
+            [
+              4.703,
+              4.35
+            ],
+            [
+              5.501,
+              4.35
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "tipo": "porta",
+      "material": "madeira",
+      "x1": 6.648,
+      "y1": 5.5,
+      "x2": 5.947,
+      "y2": 5.5,
+      "recorte": [
+        {
+          "tipo": "parede",
+          "material": "alvenaria",
+          "vertices": [
+            [
+              5.947,
+              5.5
+            ],
+            [
+              6.648,
+              5.5
+            ],
+            [
+              6.648,
+              5.65
+            ],
+            [
+              5.947,
+              5.65
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "tipo": "porta",
+      "material": "madeira",
+      "x1": 9.998,
+      "y1": 7.05,
+      "x2": 9.098,
+      "y2": 7.05,
+      "recorte": [
+        {
+          "tipo": "parede",
+          "material": "alvenaria",
+          "vertices": [
+            [
+              9.998,
+              7.2
+            ],
+            [
+              9.098,
+              7.2
+            ],
+            [
+              9.098,
+              7.05
+            ],
+            [
+              9.998,
+              7.05
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "tipo": "porta",
+      "material": "vidro",
+      "x1": 8.75,
+      "y1": 1.3,
+      "x2": 10.349,
+      "y2": 1.3,
+      "recorte": [
+        {
+          "tipo": "parede",
+          "material": "alvenaria",
+          "vertices": [
+            [
+              10.349,
+              1.45
+            ],
+            [
+              8.75,
+              1.45
+            ],
+            [
+              8.75,
+              1.3
+            ],
+            [
+              10.349,
+              1.3
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "tipo": "porta",
+      "material": "vidro",
+      "x1": 4.95,
+      "y1": 7.05,
+      "x2": 4.948,
+      "y2": 5.65,
+      "recorte": []
+    },
+    {
+      "tipo": "porta",
+      "material": "vidro",
+      "x1": 3.05,
+      "y1": 2.448,
+      "x2": 4.45,
+      "y2": 2.45,
+      "recorte": []
+    }
+  ],
+  "moveis": [
+    {
+      "tipo": "equipamento_eletrico",
+      "nome": "Equipamento eletrico",
+      "material": "metal",
+      "x": 11.88,
+      "y": 5.57,
+      "largura": 0.8,
+      "profundidade": 0.6
+    },
+    {
+      "tipo": "armario",
+      "nome": "Armario",
+      "material": "madeira",
+      "x": 11.88,
+      "y": 6.2,
+      "largura": 0.7799999999999994,
+      "profundidade": 0.35999999999999943
+    },
+    {
+      "tipo": "balcao",
+      "nome": "Balcao",
+      "material": "madeira",
+      "x": 12.0,
+      "y": 3.4,
+      "largura": 0.7,
+      "profundidade": 2.15
+    },
+    {
+      "tipo": "equipamento_eletrico",
+      "nome": "Equipamento eletrico",
+      "material": "metal",
+      "x": 12.0,
+      "y": 2.65,
+      "largura": 0.6999999999999993,
+      "profundidade": 0.6000000000000001
+    },
+    {
+      "tipo": "balcao",
+      "nome": "Balcao",
+      "material": "madeira",
+      "x": 12.0,
+      "y": 1.45,
+      "largura": 0.7,
+      "profundidade": 1.2
+    },
+    {
+      "tipo": "equipamento_eletrico",
+      "nome": "Equipamento eletrico",
+      "material": "metal",
+      "x": 11.0,
+      "y": 1.45,
+      "largura": 1.0,
+      "profundidade": 0.55
+    },
+    {
+      "tipo": "mesa",
+      "nome": "Mesa",
+      "material": "madeira",
+      "x": 10.3,
+      "y": 5.65,
+      "largura": 0.5499999999999989,
+      "profundidade": 0.9499999999999993
+    },
+    {
+      "tipo": "balcao",
+      "nome": "Balcao",
+      "material": "madeira",
+      "x": 10.35,
+      "y": 1.45,
+      "largura": 0.5,
+      "profundidade": 2.6
+    },
+    {
+      "tipo": "equipamento_eletrico",
+      "nome": "Equipamento eletrico",
+      "material": "metal",
+      "x": 10.7,
+      "y": 2.4,
+      "largura": 0.15000000000000036,
+      "profundidade": 0.9250000000000003
+    },
+    {
+      "tipo": "personalizado",
+      "nome": "Sofá",
+      "material": "tecido",
+      "x": 8.0,
+      "y": 3.4,
+      "largura": 1.0,
+      "profundidade": 0.6000000000000001
+    },
+    {
+      "tipo": "personalizado",
+      "nome": "Sofá",
+      "material": "tecido",
+      "x": 8.0,
+      "y": 2.0,
+      "largura": 0.6500000000000004,
+      "profundidade": 1.4
+    },
+    {
+      "tipo": "mesa",
+      "nome": "Mesa",
+      "material": "madeira",
+      "x": 7.45,
+      "y": 5.65,
+      "largura": 1.2000000000000002,
+      "profundidade": 1.0
+    },
+    {
+      "tipo": "balcao",
+      "nome": "Balcao",
+      "material": "pedra",
+      "x": 4.0,
+      "y": 3.35,
+      "largura": 0.4500000000000002,
+      "profundidade": 0.9999999999999996
+    },
+    {
+      "tipo": "balcao",
+      "nome": "Balcao",
+      "material": "pedra",
+      "x": 5.75,
+      "y": 6.7,
+      "largura": 1.0,
+      "profundidade": 0.34999999999999964
+    },
+    {
+      "tipo": "armario",
+      "nome": "Armario",
+      "material": "madeira",
+      "x": 6.0,
+      "y": 3.9,
+      "largura": 1.7999999999999998,
+      "profundidade": 0.44999999999999973
+    },
+    {
+      "tipo": "balcao",
+      "nome": "Mesa",
+      "material": "madeira",
+      "x": 4.6,
+      "y": 2.2,
+      "largura": 0.65,
+      "profundidade": 1.332
+    },
+    {
+      "tipo": "personalizado",
+      "nome": "Sofá",
+      "material": "tecido",
+      "x": 5.273,
+      "y": 1.45,
+      "largura": 1.5270000000000001,
+      "profundidade": 0.5
+    },
+    {
+      "tipo": "cama",
+      "nome": "Cama",
+      "material": "madeira",
+      "x": 6.95,
+      "y": 1.45,
+      "largura": 0.8410000000000002,
+      "profundidade": 2.05
+    },
+    {
+      "tipo": "equipamento_eletrico",
+      "nome": "Equipamento eletrico",
+      "material": "metal",
+      "x": 4.6,
+      "y": 2.45,
+      "largura": 0.15000000000000036,
+      "profundidade": 0.9499999999999997
+    },
+    {
+      "tipo": "equipamento_eletrico",
+      "nome": "Equipamento eletrico",
+      "material": "metal",
+      "x": 4.8,
+      "y": 2.2,
+      "largura": 0.4500000000000002,
+      "profundidade": 0.19999999999999973
+    },
+    {
+      "tipo": "cama",
+      "nome": "Cama",
+      "material": "madeira",
+      "x": 0.0,
+      "y": 4.35,
+      "largura": 1.65,
+      "profundidade": 1.3500000000000005
+    },
+    {
+      "tipo": "guarda_roupa",
+      "nome": "Guarda-roupa",
+      "material": "madeira",
+      "x": 0.0,
+      "y": 6.65,
+      "largura": 2.15,
+      "profundidade": 0.39999999999999947
+    },
+    {
+      "tipo": "mesa",
+      "nome": "Mesa",
+      "material": "madeira",
+      "x": 1.0,
+      "y": 3.15,
+      "largura": 1.9,
+      "profundidade": 0.5
+    },
+    {
+      "tipo": "equipamento_eletrico",
+      "nome": "Equipamento eletrico",
+      "material": "metal",
+      "x": 1.45,
+      "y": 3.15,
+      "largura": 1.0890000000000002,
+      "profundidade": 0.1499999999999999
+    }
+  ],
+  "pontos_medicao": [
+    {
+      "id": 2,
+      "x": 0.5,
+      "y": 6.2,
+      "tipo": "medicao"
+    },
+    {
+      "id": 3,
+      "x": 0.5,
+      "y": 5.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 4,
+      "x": 0.5,
+      "y": 3.65,
+      "tipo": "medicao"
+    },
+    {
+      "id": 5,
+      "x": 1.45,
+      "y": 5.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 6,
+      "x": 1.45,
+      "y": 6.2,
+      "tipo": "medicao"
+    },
+    {
+      "id": 7,
+      "x": 1.45,
+      "y": 4.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 8,
+      "x": 2.45,
+      "y": 4.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 9,
+      "x": 2.45,
+      "y": 5.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 10,
+      "x": 2.45,
+      "y": 6.2,
+      "tipo": "medicao"
+    },
+    {
+      "id": 11,
+      "x": 3.5,
+      "y": 5.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 12,
+      "x": 3.65,
+      "y": 3.4,
+      "tipo": "medicao"
+    },
+    {
+      "id": 13,
+      "x": 3.65,
+      "y": 2.05,
+      "tipo": "medicao"
+    },
+    {
+      "id": 14,
+      "x": 4.45,
+      "y": 6.35,
+      "tipo": "medicao"
+    },
+    {
+      "id": 15,
+      "x": 5.95,
+      "y": 6.35,
+      "tipo": "medicao"
+    },
+    {
+      "id": 16,
+      "x": 5.1,
+      "y": 3.9,
+      "tipo": "medicao"
+    },
+    {
+      "id": 17,
+      "x": 7.4,
+      "y": 3.7,
+      "tipo": "medicao"
+    },
+    {
+      "id": 18,
+      "x": 7.4,
+      "y": 2.75,
+      "tipo": "medicao"
+    },
+    {
+      "id": 19,
+      "x": 7.4,
+      "y": 1.8,
+      "tipo": "medicao"
+    },
+    {
+      "id": 20,
+      "x": 6.0,
+      "y": 2.75,
+      "tipo": "medicao"
+    },
+    {
+      "id": 21,
+      "x": 6.0,
+      "y": 3.65,
+      "tipo": "medicao"
+    },
+    {
+      "id": 22,
+      "x": 6.0,
+      "y": 1.7,
+      "tipo": "medicao"
+    },
+    {
+      "id": 23,
+      "x": 4.95,
+      "y": 1.75,
+      "tipo": "medicao"
+    },
+    {
+      "id": 24,
+      "x": 5.0,
+      "y": 5.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 25,
+      "x": 6.0,
+      "y": 5.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 26,
+      "x": 7.0,
+      "y": 5.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 27,
+      "x": 8.0,
+      "y": 5.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 28,
+      "x": 7.0,
+      "y": 6.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 29,
+      "x": 8.0,
+      "y": 6.8,
+      "tipo": "medicao"
+    },
+    {
+      "id": 30,
+      "x": 7.2,
+      "y": 6.75,
+      "tipo": "medicao"
+    },
+    {
+      "id": 31,
+      "x": 9.0,
+      "y": 5.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 32,
+      "x": 9.0,
+      "y": 6.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 33,
+      "x": 9.5,
+      "y": 6.75,
+      "tipo": "medicao"
+    },
+    {
+      "id": 34,
+      "x": 10.0,
+      "y": 6.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 35,
+      "x": 10.0,
+      "y": 5.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 36,
+      "x": 10.0,
+      "y": 4.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 37,
+      "x": 9.0,
+      "y": 4.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 38,
+      "x": 8.5,
+      "y": 3.7,
+      "tipo": "medicao"
+    },
+    {
+      "id": 39,
+      "x": 9.0,
+      "y": 3.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 40,
+      "x": 9.0,
+      "y": 2.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 41,
+      "x": 8.35,
+      "y": 2.7,
+      "tipo": "medicao"
+    },
+    {
+      "id": 42,
+      "x": 10.0,
+      "y": 2.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 43,
+      "x": 10.0,
+      "y": 3.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 44,
+      "x": 11.5,
+      "y": 4.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 45,
+      "x": 11.5,
+      "y": 5.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 46,
+      "x": 11.5,
+      "y": 6.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 47,
+      "x": 11.5,
+      "y": 3.05,
+      "tipo": "medicao"
+    },
+    {
+      "id": 48,
+      "x": 11.5,
+      "y": 2.0,
+      "tipo": "medicao"
+    },
+    {
+      "id": 49,
+      "x": 10.75,
+      "y": 4.5,
+      "tipo": "medicao"
+    },
+    {
+      "id": 50,
+      "x": 10.0,
+      "y": 0.55,
+      "tipo": "medicao"
+    },
+    {
+      "id": 51,
+      "x": 9.0,
+      "y": 0.55,
+      "tipo": "medicao"
+    },
+    {
+      "id": 1,
+      "x": 7.85,
+      "y": 5.85,
+      "tipo": "access_point"
+    }
+  ],
+  "guias": []
+}

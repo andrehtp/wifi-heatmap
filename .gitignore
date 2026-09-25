@@ -8,4 +8,8 @@ __pycache__/
 *.png
 *.csv
 !medicao1.csv
+!medicao2.csv
 !planta_casa.json
+!planta_casa2.json
+!planta_casa_sempm.json
+!planta_casa2_sempm.json
