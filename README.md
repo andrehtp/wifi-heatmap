@@ -248,12 +248,14 @@ de fechar a posição dos pontos.
 Depois de medir o sinal em campo, preencha a tabela CSV (a gerada acima,
 ou uma feita à mão) com uma coluna `id` (o id do ponto, igual ao mostrado
 no editor) e uma ou mais colunas de leitura, com qualquer nome
-(`leitura_1`, `leitura_2`, ...). Células
-vazias são ignoradas, e a média das leituras de cada ponto é o valor
-usado. Abra o visualizador com a planta e a tabela:
+(`leitura_1`, `leitura_2`, ...). Células vazias são ignoradas. Abra o
+visualizador com a planta e a tabela:
 
 ```bash
 python heatmap_gerador.py --entrada planta_casa.json --tabela medicao.csv
+
+# outra forma de combinar as leituras de cada ponto
+python heatmap_gerador.py --entrada planta_casa.json --tabela medicao.csv --agregacao mediana
 ```
 
 Ids da tabela que não existem na planta, ou que são de access point,
@@ -261,20 +263,78 @@ geram um aviso e são ignorados. Os pontos de medição sem leitura também
 são listados no aviso. Plantas antigas com `leituras_dbm` no próprio JSON
 ainda abrem sem `--tabela`.
 
-A janela mostra a planta desenhada por baixo do mapa de calor. Na coluna
-da direita é possível trocar:
+### Leituras de cada ponto (`--agregacao`)
 
-- o **método de interpolação**: IDW, gaussiana ou vizinho mais próximo;
-- o **estilo visual**: campo contínuo, bandas/contornos ou blobs por
-  ponto;
-- a **área do mapa**: só dentro do imóvel (recortada pelas paredes) ou
-  expandida;
+- `potencia` (padrão): converte cada leitura para mW, tira a média e
+  volta para dBm. dBm é escala logarítmica, e a média direta em dBm
+  subestima o sinal quando as leituras variam: `[-50, -70]` dá −52,97 dBm
+  em potência e −60 dBm em dBm.
+- `dbm`: média aritmética direta em dBm.
+- `mediana`: mediana das leituras (robusta a uma leitura ruim).
 
-e exportar o resultado em PNG ou SVG pelos botões "Exportar PNG"/"Exportar
-SVG" (o nome do arquivo pode ser editado na caixa de texto acima deles).
-Pontos de medição sem leitura aparecem como marcador vazio; access
-points nunca entram no cálculo do heatmap, só são desenhados como
-referência.
+Pontos cujas leituras variam mais de 6 dB entre a menor e a maior geram
+um aviso no terminal com o id e as leituras, para achar medições ruins.
+
+### Métodos de interpolação
+
+| Método | O que faz | Parâmetro (caixa do painel) |
+|---|---|---|
+| IDW | média ponderada pelo inverso da distância | potência p (padrão 3) |
+| Gaussiana | média ponderada por kernel gaussiano | σ em metros (padrão 1) |
+| Vizinho mais próximo | valor do ponto mais próximo (Voronoi) | — |
+| Linear (Delaunay) | interpolação linear nos triângulos; fora deles, vizinho mais próximo | — |
+| RBF thin-plate | spline de placa fina + plano, com suavização | suavização λ (padrão 0,01) |
+| Kriging ordinário | variograma (exponencial/esférico) ajustado às medições | nugget relativo (padrão auto) |
+| Path loss | modelo log-distância `P0 − 10·n·log10(d)` ajustado às medições | — |
+| Multi-wall | log-distância menos a perda de cada parede atravessada | escala das perdas (padrão 1) |
+| Híbrido | multi-wall + resíduos (medido − modelo) interpolados por kriging | escala das perdas (padrão 1) |
+
+Os quatro últimos usam a planta. Path loss, multi-wall e híbrido medem a
+distância até o access point e, com vários APs, usam o mais forte em
+cada ponto. Sem nenhum AP, path loss e multi-wall caem para IDW e o
+híbrido para kriging, com aviso no título. O multi-wall conta as paredes
+que o segmento AP → ponto atravessa. Como as paredes já estão recortadas
+pelas aberturas, passar por uma porta ou vão não conta parede. A perda
+por material (valores típicos em 2,4 GHz, com a fonte no comentário),
+a meia parede (metade da perda) e a janela (2 dB) ficam em
+`heatmap/constants.py`. `P0` e `n` são sempre ajustados às medições, e
+o título mostra os valores ajustados.
+
+### Validação cruzada (LOOCV)
+
+Para escolher o método, o visualizador faz uma validação cruzada
+*leave-one-out*: tira um ponto, interpola com os demais, compara com o
+valor medido e repete para todos. Ao abrir, ele imprime no terminal uma
+tabela com RMSE, MAE e viés (em dB) de cada método, marcando o de menor
+RMSE. O título do gráfico mostra o RMSE do método e do parâmetro ativos.
+
+### Janela
+
+A janela mostra a planta desenhada por baixo do mapa de calor, com o
+valor agregado ao lado do id de cada ponto medido (ex.: `12: −54`). Na
+coluna da direita é possível trocar:
+
+- o **método de interpolação** e o seu **parâmetro** (caixa de texto logo
+  abaixo; enter aplica, e um valor inválido mantém o anterior com aviso
+  no título);
+- o **estilo visual**: campo contínuo, bandas ou blobs por ponto;
+- a **área do mapa**: só dentro do imóvel (recortada pelo contorno
+  real das paredes) ou expandida. Se as paredes não fecham o contorno,
+  o recorte usa o fecho convexo das paredes e dos pontos, com aviso no título;
+- a **escala de cor**: fixa (−90 a −30 dBm, igual para todos os métodos e
+  estilos, então trocar de método não muda as cores sem o sinal mudar)
+  ou automática (mínimo/máximo das leituras medidas).
+
+As bandas usam limites fixos nos limiares de qualidade Wi-Fi (−30, −50,
+−60, −67, −70, −80, −90 dBm), e a barra de cores marca esses valores.
+A grade de interpolação tem células quadradas de 5 cm, com um teto de
+células para plantas grandes.
+
+Os botões "Exportar PNG"/"Exportar SVG" salvam o resultado (o nome do
+arquivo pode ser editado na caixa de texto acima deles). Pontos de
+medição sem leitura aparecem como marcador vazio. Access points nunca
+entram como dado do heatmap: são desenhados como referência e servem de
+origem para os modelos de propagação.
 
 ## Estrutura do projeto
 
@@ -304,8 +364,11 @@ Wifi_heatmap/
     ├── io.py                # leitura da planta JSON
     ├── tabela.py            # leitura do CSV de medições e associação por id
     ├── mascara.py           # recorte do mapa ao interior do imóvel
-    ├── interpolation.py     # métodos de interpolação (IDW, gaussiana, vizinho)
-    ├── rendering.py         # desenho da planta e dos estilos visuais do heatmap
-    ├── widgets.py            # seletores de método/estilo e botões de exportação
-    └── constants.py          # estilos, colormap e texto de ajuda
+    ├── interpolation.py     # agregação das leituras, grade e os 9 métodos (registro)
+    ├── krigagem.py          # variograma e kriging ordinário
+    ├── propagacao.py        # log-distância e multi-wall (paredes cruzadas)
+    ├── validacao.py         # validação cruzada leave-one-out
+    ├── rendering.py         # desenho da planta, escala de cor e estilos visuais
+    ├── widgets.py           # seletores, caixa de parâmetro e botões de exportação
+    └── constants.py         # estilos, escala dBm, atenuações e parâmetros padrão
 ```

@@ -16,9 +16,10 @@ consumes the JSON it produces:
    JSON file.
 2. **`heatmap/`** — an interactive matplotlib viewer that reads a plan
    JSON plus a CSV table of dBm readings (keyed by point `id`),
-   interpolates a Wi-Fi signal heatmap over the floor plan (multiple
-   interpolation methods and visual styles, switchable live), and exports
-   the result to PNG or SVG.
+   interpolates a Wi-Fi signal heatmap over the floor plan (9
+   interpolation methods — geostatistical and propagation-model based —
+   and 3 visual styles, switchable live, with leave-one-out validation),
+   and exports the result to PNG or SVG.
 
 The two are deliberately decoupled pipeline stages, each with its own
 package and CLI entry script — `heatmap/` never imports from `editor/`,
@@ -49,6 +50,7 @@ python planta_editor.py --passo 0.5
 python planta_editor.py --entrada planta_casa.json --gerar-tabela medicao.csv [--leituras 3] [--forcar]
 
 # open the interactive heatmap viewer (CSV columns: id, leitura1, leitura2, ...)
+# --agregacao {potencia,dbm,mediana}: how a point's readings are combined (default potencia)
 python heatmap_gerador.py --entrada planta_casa.json --tabela medicao.csv
 ```
 
@@ -77,12 +79,22 @@ from heatmap.core import HeatmapViewer
 from heatmap.tabela import ler_csv_leituras, associar_leituras
 dados = carregar_planta('/tmp/out.json')
 leituras, _ = associar_leituras(dados, ler_csv_leituras('medicao.csv')[0])
-v = HeatmapViewer(dados, saida_base=Path('/tmp/mapa'), leituras_por_id=leituras)
-v.metodo, v.estilo = 'idw', 'campo_continuo'  # or any key in MODOS_INTERPOLACAO/MODOS_RENDER
+v = HeatmapViewer(dados, saida_base=Path('/tmp/mapa'), leituras_por_id=leituras,
+                  agregacao='potencia', validar=False)  # validar=True prints the LOOCV table
+v.metodo, v.estilo = 'hibrido', 'campo_continuo'  # any key in MODOS_INTERPOLACAO/MODOS_RENDER
+v.area, v.escala = 'dentro', 'fixa'               # MODOS_AREA / MODOS_ESCALA
 v._redesenhar()
-v._exportar('png')   # writes /tmp/mapa.png
+v.fig.savefig('/tmp/mapa.png')  # _exportar reads the path from the TextBox
 "
 ```
+Setting `v.metodo` directly doesn't move the radio buttons (the image is
+right, the panel isn't); to drive the real callbacks use
+`v._radio_metodo.set_active(i)` (same for `_radio_estilo`, `_radio_area`,
+`_radio_escala`). The parameter box is `v._tb_param` (`set_val("2")` +
+`_redesenhar()`). Methods can also be called standalone:
+`fn(grid_x, grid_y, coords, valores, montar_ctx(dados, parametro))`, and
+`heatmap.validacao.tabela_loocv(dados, coords, valores)` prints the
+comparison table.
 To exercise the real event handlers (click accumulation, enter, dragging)
 pass fake events: `ed._on_click(SimpleNamespace(inaxes=ed.ax, xdata=x,
 ydata=y, button=1, x=0, y=0))`, `ed._on_key(SimpleNamespace(key="enter"))`,
@@ -92,9 +104,11 @@ ydata=y, button=1, x=0, y=0))`, `ed._on_key(SimpleNamespace(key="enter"))`,
 have a known bug (matplotlib#32222) that breaks `TextBox` on window
 resize. Only bump past 3.10.9 once 3.11.2+ is released. The only other
 third-party dependency is `shapely` (polygon walls: buffering, cutting,
-unions, room detection, point-in-polygon). CSV parsing uses the stdlib
-`csv` module and interpolation/k-means are plain `numpy`, no
-`scipy`/`pandas`.
+unions, room detection, point-in-polygon, and the vectorised wall-crossing
+count of the multi-wall model). CSV parsing uses the stdlib `csv` module
+and interpolation/k-means are plain `numpy` (kriging and RBF are small
+N×N systems via `np.linalg.solve`; Delaunay comes from
+`matplotlib.tri`), no `scipy`/`pandas`/`pykrige`/`sklearn`.
 
 ## Architecture
 
@@ -263,42 +277,102 @@ Entry point: `heatmap_gerador.py` → `heatmap.cli:main` → builds
 analogous in spirit to `PlantaEditor` but read-only, no editing/navigation
 mixins). `heatmap/constants.py` duplicates the handful of style dicts it
 needs from `editor/constants.py` rather than importing it, to keep the
-two packages decoupled.
+two packages decoupled; it also holds every tunable default (dBm color
+scale and band levels, grid resolution in metres + cell cap, per-material
+wall attenuation with sources, log-distance defaults/limits, and
+`PARAMETROS_PADRAO` = each method's main parameter `(label, default,
+(min, max))`).
 
 - `heatmap/tabela.py`: `ler_csv_leituras` (any CSV with an `id` column
   plus any number of reading columns via `csv.DictReader`; blank cells
   skipped, bad cells warned-and-skipped; only a missing `id` column
   raises) and `associar_leituras` (keeps readings of ids that are
   measurement points in the plan, warns about unknown/AP ids and points
-  with no reading). `--tabela` is optional: without it
+  with no reading). It returns raw `{id: [floats]}` — aggregation happens
+  in `interpolation.py`. `--tabela` is optional: without it
   `leituras_do_ponto` falls back to `leituras_dbm` inside old JSONs.
-- `heatmap/interpolation.py`: `preparar_amostras(dados, leituras_por_id)`
-  splits `tipo=="medicao"` points into ones with data (mean reading used
-  as the scalar value) and empty ones (drawn hollow, excluded from
-  interpolation); `access_point` points are never a data source. Three
-  numpy-only grid functions sharing the signature
-  `(grid_x, grid_y, coords, valores) -> grid`: `idw`, `gaussiana`,
-  `vizinho_mais_proximo` (nearest-neighbor via `np.argmin`, no
-  `scipy.spatial`), registered in `MODOS_INTERPOLACAO`.
-- `heatmap/mascara.py`: "inside the house" mask — rasterizes walls,
-  opening footprints and opening segments with `shapely.contains_xy`, then
-  flood-fills the outside from the grid border. `MODOS_AREA` switches
-  between clipped and full grid.
+- `heatmap/interpolation.py`:
+  - `MODOS_AGREGACAO` (`potencia` = mean in mW, the default; `dbm`;
+    `mediana`) used by `preparar_amostras(dados, leituras_por_id,
+    agregacao)` → `(coords, valores, vazios, ids)`: `tipo=="medicao"`
+    points with data vs. empty ones (drawn hollow, excluded); access
+    points are never a data source. `avisos_dispersao` flags points whose
+    readings spread more than `LIMITE_DISPERSAO_DB` (printed once by the
+    CLI).
+  - `grade(dados)`: square cells of `RESOLUCAO_M`, enlarged only to stay
+    under `MAX_CELULAS`.
+  - Every method has the signature `(grid_x, grid_y, coords, valores, ctx)
+    -> grid`, with grid_x/grid_y of any shape (the full grid, or a single
+    point in LOOCV). `montar_ctx(dados, parametro, cache)` builds `ctx`:
+    `aps` (K,2), `barreiras` (wall/window geometry + dB loss, from
+    `propagacao.barreiras`), `parametro` (None = default), a shared
+    `cache`, and the `avisos` list / `ajuste` dict the method fills
+    (fallback warnings, fitted P0/n/variogram) for the plot title.
+  - `MODOS_INTERPOLACAO = {key: (label, fn, PARAMETROS_PADRAO[key])}`,
+    9 methods: `idw`, `gaussiana`, `vizinho`, `linear` (Delaunay via
+    `matplotlib.tri`, NaN outside the hull filled by nearest neighbour),
+    `rbf` (thin-plate spline + degree-1 polynomial, normalised coords,
+    smoothing λ), `kriging`, `path_loss`, `multi_wall`, `hibrido`
+    (multi-wall + kriged residuals, IDW if the residual variogram falls
+    back). Methods that can't run degrade instead of raising (no AP →
+    IDW/kriging, <3 points → nearest/IDW) and say so in `ctx["avisos"]`.
+- `heatmap/krigagem.py`: empirical semivariogram in distance bins, fit of
+  exponential/spherical + nugget (grid search on range, weighted least
+  squares on nugget/sill), documented fallback model for few points,
+  ordinary kriging solved once in dual form (`np.linalg.solve`, lstsq if
+  singular). The nugget is treated as measurement noise at prediction
+  time (no spikes on the points).
+- `heatmap/propagacao.py`: log-distance `P0 − 10 n log10(d/1 m)` (d ≥
+  0.5 m) with P0/n fitted by least squares (n clamped to `LIMITES_N`,
+  multiple APs → strongest AP per point), and the multi-wall loss:
+  touching wall pieces of the same tipo/material are unioned, then all
+  AP→target segments are tested at once with `STRtree.query(predicate=
+  "intersects")` + vectorised `shapely.intersection` (a wall crossed in k
+  pieces counts k times; walls containing the AP are ignored). Losses are
+  cached in `ctx["cache"]` per AP + point set (~0.4 s for the full grid).
+- `heatmap/validacao.py`: `loocv` (drop one point, predict only at it,
+  RMSE/MAE/bias) and `tabela_loocv` (all methods, printed when the viewer
+  opens; the title shows the active method's RMSE).
+- `heatmap/mascara.py`: `contorno_interior` (vector, primary) fills each
+  component of the union of walls + opening footprints/segments by its
+  exterior ring, which becomes a matplotlib clip path (exact edge). If
+  the contour doesn't close — little room area, or >10% of the plan's
+  points outside the closed rooms — it returns the convex hull of walls +
+  points with `fechado=False` (warning in the title). `mascara_interior`
+  (raster flood fill, same open-contour fallback) is only used if the
+  vector path raises. `MODOS_AREA` switches between clipped and full grid.
 - `heatmap/rendering.py`: `desenhar_planta_base` is a read-only
   reimplementation of the relevant slice of `DrawingMixin._redesenhar`
-  (it still draws old line walls, for old JSONs). Three overlay styles
-  registered in `MODOS_RENDER`, each tagged `"grade"` (consumes the
-  interpolated grid — `campo_continuo` via `pcolormesh`, `bandas_contorno`
-  via `contourf`) or `"pontos"` (consumes raw samples directly — `blobs`,
-  concentric translucent circles per point, no grid);
-  `HeatmapViewer._redesenhar` dispatches on that tag.
+  (it still draws old line walls, for old JSONs; points with data are
+  labelled `id: dBm`). `MODOS_ESCALA` (`fixa` = `ESCALA_DBM`, `auto` =
+  min/max of the *measured* values) produces the one `Normalize` shared
+  by every style. Styles in `MODOS_RENDER` have the signature
+  `fn(ax, grid_x, grid_y, entrada, norm, cmap, mascara=None) -> (artists
+  to clip, colorbar mappable)` and are tagged `"grade"` (`entrada` = the
+  interpolated grid — `campo_continuo` via `pcolormesh`,
+  `bandas_contorno` via `contourf` on `NIVEIS_DBM`) or `"pontos"`
+  (`entrada` = `(coords, valores)` — `blobs`, one RGBA image with a
+  compact radial kernel, opacity = max kernel so alphas never stack);
+  `HeatmapViewer._redesenhar` dispatches on that tag and clips.
+- `heatmap/core.py`: samples, grid and contour are computed once in
+  `__init__`; interpolated grids and LOOCV results are cached per
+  `(method, parameter)`, so switching style/area/scale doesn't
+  recompute. The colorbar's `cax` comes from an axes divider, and its
+  original locator is restored before every `fig.colorbar` (a colorbar
+  with `extend` wraps the locator and would shrink the cax on every
+  redraw).
 - `heatmap/widgets.py` introduces `matplotlib.widgets.RadioButtons` (not
   used anywhere in `editor/`, which relies on digit-key palettes instead)
-  to pick the method/style/area live, plus a `TextBox` + two `Button`s
-  wired to `HeatmapViewer._exportar("png"|"svg")` (`fig.savefig`, path
-  taken from the `TextBox`, default derived from `--entrada`/`--saida`).
+  for method/style/area/scale. The right column is laid out top-down
+  from the registries' sizes (a new method needs no coordinates). There's
+  a `TextBox` for the active method's parameter (read on every redraw,
+  invalid → keeps the old value + title warning), fonts scaled to the
+  window height, and the export `TextBox` + two `Button`s wired to
+  `HeatmapViewer._exportar("png"|"svg")`.
 
 Extending either package (a new interpolation method, a new render style,
 a new distribution method, a new CSV column convention) follows the same
 registry pattern — `MODOS_INTERPOLACAO`/`MODOS_RENDER`/`MODOS_AREA`/
-`MODOS_DISTRIBUICAO` dicts, not new dispatch plumbing.
+`MODOS_ESCALA`/`MODOS_AGREGACAO`/`MODOS_DISTRIBUICAO` dicts, not new
+dispatch plumbing. A new interpolation method also needs its entry in
+`PARAMETROS_PADRAO`.
